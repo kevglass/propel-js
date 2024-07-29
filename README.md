@@ -1,4 +1,4 @@
-<img src="logo.png" width="200">
+<img src="https://github.com/kevglass/propel-js/raw/main/logo.png" width="200">
 
 # propel-js - Tiny Open Physics Library.
 
