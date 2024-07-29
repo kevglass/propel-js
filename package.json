@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "doc": "typedoc src/index.ts",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "serve": "npx serve@latest"
   },
   "repository": {
     "type": "git",
@@ -22,10 +23,8 @@
     "url": "https://github.com/kevglass/propel-js/issues"
   },
   "homepage": "https://github.com/kevglass/propel-js#readme",
-  "dependencies": {
-    "typescript": "^5.3.3"
-  },
   "devDependencies": {
-    "typedoc": "^0.25.8"
+    "typedoc": "^0.25.8",
+    "typescript": "^5.3.3"
   }
 }

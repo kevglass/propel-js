@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "outDir": "./examples-dist",
+    "skipLibCheck": true,
+  },
+  "include": ["src"]
+}
