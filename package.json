@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/kevglass/propel-js/issues"
   },
-  "homepage": "https://github.com/kevglass/proel-js#readme",
+  "homepage": "https://github.com/kevglass/propel-js#readme",
   "dependencies": {
     "typescript": "^5.3.3"
   },
