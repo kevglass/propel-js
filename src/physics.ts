@@ -547,11 +547,11 @@ export namespace physics {
         for (const body of dynamics) {
             body.restingTime += 1 / fps;
 
-            if (Math.abs(body.center.x - body.averageCenter.x) > 1) {
+            if (Math.abs(body.center.x - body.averageCenter.x) > 0.1) {
                 body.averageCenter.x = body.center.x;
                 body.restingTime = 0;
             }
-            if (Math.abs(body.center.y - body.averageCenter.y) > 1) {
+            if (Math.abs(body.center.y - body.averageCenter.y) > 0.1) {
                 body.averageCenter.y = body.center.y;
                 body.restingTime = 0;
             }
