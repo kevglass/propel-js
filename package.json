@@ -1,0 +1,31 @@
+{
+  "name": "propel-js",
+  "version": "1.0.0",
+  "description": "Tiny Open Physics Engine",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "doc": "typedoc src/index.ts",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevglass/propel-js.git"
+  },
+  "author": "Kevin Glass",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kevglass/propel-js/issues"
+  },
+  "homepage": "https://github.com/kevglass/proel-js#readme",
+  "dependencies": {
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "typedoc": "^0.25.8"
+  }
+}
