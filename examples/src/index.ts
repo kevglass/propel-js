@@ -25,6 +25,7 @@ export function example1() {
 // stack of blocks
 export function example2() {
     world = physics.createWorld();
+    world.restTime = 0.25;
     const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, 0.5);
     physics.addBody(world, rect);
 
