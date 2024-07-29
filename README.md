@@ -1,4 +1,4 @@
-# propel-js - Tiny Open Phsics Library.
+# propel-js - Tiny Open Physics Library.
 A free, open source, teeny weeny physics library for typescript. Mostly just some utilities for making games.
 
 [Documentation](https://kevglass.github.io/propel-js/)
