@@ -4,6 +4,7 @@ A free, open source, teeny weeny physics library for typescript. Mostly just som
 [Documentation](https://kevglass.github.io/propel-js/docs)
 
 [Examples](https://kevglass.github.io/propel-js/examples/)
+
 ## Why?
 
 When working with networked physics games it's useful to be able to seralize state to send across the wire. Other physics
