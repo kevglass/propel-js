@@ -1,4 +1,4 @@
-![](logo.png)
+<img src="logo.png" width="200">
 
 # propel-js - Tiny Open Physics Library.
 
