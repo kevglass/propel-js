@@ -160,6 +160,8 @@ export namespace physics {
         frameCount: number;
         /** The restriction to apply on joints to get them to stop faster */
         jointRestriction: number;
+        /** The time it takes for a non-moving dynamic body to go into resting state */
+        restTime: number;
     }
 
     /**
@@ -252,9 +254,10 @@ export namespace physics {
      * Create a new world for bodies to live in
      * 
      * @param gravity The gravity to apply to bodies in this system
+     * @param restTime The time it takes for a body to go into "resting" state (default 1=second)
      * @returns The newly created world
      */
-    export function createWorld(gravity?: Vector2): World {
+    export function createWorld(gravity?: Vector2, restTime: number = 1): World {
         return {
             staticBodies: [],
             dynamicBodies: [],
@@ -265,7 +268,8 @@ export namespace physics {
             nextId: 1,
             joints: [],
             frameCount: 0,
-            jointRestriction: 1
+            jointRestriction: 1,
+            restTime
         }
     };
 
@@ -430,6 +434,9 @@ export namespace physics {
             if (!body.velocity && !body.acceleration) {
                 continue
             }
+            if (bodyAtRest(world, body)) {
+                continue;
+            }
             // Update position/rotation
             body.velocity = addVec2(body.velocity, scaleVec2(body.acceleration, 1 / fps));
             _moveBody(body, scaleVec2(body.velocity, 1 / fps));
@@ -495,6 +502,7 @@ export namespace physics {
                     // Test bounds
                     const bodyJ = allEnabled[j];
 
+                    // resting and static bodies don't need to collide
                     if (boundTest(bodyI, bodyJ)) {
                         // Test collision
                         let collisionInfo = EmptyCollision();
@@ -547,7 +555,7 @@ export namespace physics {
                 body.averageCenter.y = body.center.y;
                 body.restingTime = 0;
             }
-            if (Math.abs(body.angle - body.averageAngle) >= 0.1) {
+            if (Math.abs(body.angle - body.averageAngle) >= 0.05) {
                 body.averageAngle = body.angle;
                 body.restingTime = 0;
             }
@@ -888,10 +896,18 @@ export namespace physics {
         return hasSupport;
     }
 
+    function bodyAtRest(world: World, body: Body): boolean {
+        if (body.static) {
+            return true;
+        }
+
+        return body.restingTime > world.restTime;
+    }
+
     // Test collision between two shapes
     function testCollision(world: World, c1: Body, c2: Body, collisionInfo: CollisionDetails): boolean {
         // static bodies don't collide with each other
-        if ((c1.static && c2.static)) {
+        if ((bodyAtRest(world, c1) && bodyAtRest(world, c2))) {
             return false;
         }
 
@@ -1040,7 +1056,7 @@ export namespace physics {
     }
 
     function resolveCollision(world: World, s1: Body, s2: Body, collisionInfo: CollisionDetails): boolean {
-        if (s1.static && s2.static) {
+        if (bodyAtRest(world, s1) && bodyAtRest(world, s2)) {
             return false;
         }
 

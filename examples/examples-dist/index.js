@@ -32,10 +32,16 @@ export function example2() {
 function render() {
     requestAnimationFrame(render);
     physics.worldStep(60, world);
-    ctx.strokeStyle = "white";
     ctx.lineWidth = 3;
     ctx.clearRect(0, 0, 500, 500);
     for (const body of physics.allBodies(world)) {
+        ctx.strokeStyle = "white";
+        if (body.static) {
+            ctx.strokeStyle = "grey";
+        }
+        else if (body.restingTime > 1) {
+            ctx.strokeStyle = "green";
+        }
         if (body.type === physics.ShapeType.CIRCLE) {
             ctx.save();
             ctx.translate(body.center.x, body.center.y);

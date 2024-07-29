@@ -130,6 +130,8 @@ export declare namespace physics {
         frameCount: number;
         /** The restriction to apply on joints to get them to stop faster */
         jointRestriction: number;
+        /** The time it takes for a non-moving dynamic body to go into resting state */
+        restTime: number;
     }
     /**
      * Get a list of all bodies in the system
@@ -162,9 +164,10 @@ export declare namespace physics {
      * Create a new world for bodies to live in
      *
      * @param gravity The gravity to apply to bodies in this system
+     * @param restTime The time it takes for a body to go into "resting" state (default 1=second)
      * @returns The newly created world
      */
-    export function createWorld(gravity?: Vector2): World;
+    export function createWorld(gravity?: Vector2, restTime?: number): World;
     /**
      * Create a joint between two bodies in the world
      *

@@ -103,9 +103,10 @@ export var physics;
      * Create a new world for bodies to live in
      *
      * @param gravity The gravity to apply to bodies in this system
+     * @param restTime The time it takes for a body to go into "resting" state (default 1=second)
      * @returns The newly created world
      */
-    function createWorld(gravity) {
+    function createWorld(gravity, restTime = 1) {
         return {
             staticBodies: [],
             dynamicBodies: [],
@@ -116,7 +117,8 @@ export var physics;
             nextId: 1,
             joints: [],
             frameCount: 0,
-            jointRestriction: 1
+            jointRestriction: 1,
+            restTime
         };
     }
     physics.createWorld = createWorld;
@@ -277,6 +279,9 @@ export var physics;
             if (!body.velocity && !body.acceleration) {
                 continue;
             }
+            if (bodyAtRest(world, body)) {
+                continue;
+            }
             // Update position/rotation
             body.velocity = addVec2(body.velocity, scaleVec2(body.acceleration, 1 / fps));
             _moveBody(body, scaleVec2(body.velocity, 1 / fps));
@@ -335,6 +340,7 @@ export var physics;
                     }
                     // Test bounds
                     const bodyJ = allEnabled[j];
+                    // resting and static bodies don't need to collide
                     if (boundTest(bodyI, bodyJ)) {
                         // Test collision
                         let collisionInfo = EmptyCollision();
@@ -382,7 +388,7 @@ export var physics;
                 body.averageCenter.y = body.center.y;
                 body.restingTime = 0;
             }
-            if (Math.abs(body.angle - body.averageAngle) >= 0.1) {
+            if (Math.abs(body.angle - body.averageAngle) >= 0.05) {
                 body.averageAngle = body.angle;
                 body.restingTime = 0;
             }
@@ -689,10 +695,16 @@ export var physics;
         }
         return hasSupport;
     }
+    function bodyAtRest(world, body) {
+        if (body.static) {
+            return true;
+        }
+        return body.restingTime > world.restTime;
+    }
     // Test collision between two shapes
     function testCollision(world, c1, c2, collisionInfo) {
         // static bodies don't collide with each other
-        if ((c1.static && c2.static)) {
+        if ((bodyAtRest(world, c1) && bodyAtRest(world, c2))) {
             return false;
         }
         // Circle vs circle
@@ -808,7 +820,7 @@ export var physics;
         return false;
     }
     function resolveCollision(world, s1, s2, collisionInfo) {
-        if (s1.static && s2.static) {
+        if (bodyAtRest(world, s1) && bodyAtRest(world, s2)) {
             return false;
         }
         const mass1 = !s1.static ? s1.mass : 0, mass2 = !s2.static ? s2.mass : 0, inertia1 = !s1.static ? s1.inertia : 0, inertia2 = !s2.static ? s2.inertia : 0;
