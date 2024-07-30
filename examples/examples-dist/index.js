@@ -1,4 +1,4 @@
-import { physics } from "../../dist/physics.js";
+import { physics } from "../../dist/index.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;

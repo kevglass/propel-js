@@ -8,7 +8,7 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && esbuild dist/index.js --minify --outfile=dist/index.min.js",
     "doc": "typedoc src/index.ts",
     "watch": "tsc --watch",
     "serve": "npx serve@latest"
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/kevglass/propel-js#readme",
   "devDependencies": {
+    "esbuild": "^0.23.0",
     "typedoc": "^0.25.8",
     "typescript": "^5.3.3"
   }
