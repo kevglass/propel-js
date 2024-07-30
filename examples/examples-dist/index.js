@@ -1,102 +1,23 @@
 import { physics } from "../../dist/index.js";
+import { simpleInit } from "./examples/Simple.js";
+import { stackInit } from "./examples/Stack.js";
+import { pileInit, pileUpdate } from "./examples/Pile.js";
+import { jointsInit } from "./examples/Joints.js";
+import { carInit } from "./examples/Car.js";
+import { avianInit } from "./examples/Avian.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
 canvas.height = 500;
 document.getElementById("demo").addEventListener("change", selectDemo);
 document.getElementById("restart").addEventListener("click", restart);
-let world = physics.createWorld();
+let world;
 let currentDemo;
-// simple shapes
-export function example1() {
-    world = physics.createWorld();
-    const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, 0.5);
-    physics.addBody(world, rect);
-    const circle = physics.createCircle(world, { x: 250, y: 150 }, 40, 1, 0.5, 0.5);
-    physics.addBody(world, circle);
-    const box = physics.createRectangle(world, { x: 255, y: 0 }, 40, 40, 1, 0.5, 0.5);
-    physics.addBody(world, box);
-}
-// stack of blocks
-export function example2() {
-    world = physics.createWorld();
-    world.restTime = 0.25;
-    const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, 0.5);
-    physics.addBody(world, rect);
-    for (let i = 0; i < 5; i++) {
-        const width = 5 - i;
-        for (let x = 0; x < width; x++) {
-            const p = 275 - (width * 50 / 2) + (x * 50);
-            const box = physics.createRectangle(world, { x: p, y: 400 - (i * 50) }, 45, 45, 1, 0.5, 0.1);
-            physics.addBody(world, box);
-        }
-    }
-}
-// every growing pile
-let frameCount = 0;
-export function example3() {
-    world = physics.createWorld();
-    world.restTime = 1000;
-    const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, 0.5);
-    physics.addBody(world, rect);
-}
-export function example3Update() {
-    if (frameCount % 30 === 0) {
-        if (Math.random() < 0.5) {
-            const circle = physics.createCircle(world, { x: 50 + Math.floor(Math.random() * 400), y: 0 }, 20 + (Math.random() * 20), 1, 0.5, 1);
-            physics.setRotation(circle, Math.random() * Math.PI * 2);
-            physics.addBody(world, circle);
-        }
-        else {
-            const box = physics.createRectangle(world, { x: 50 + Math.floor(Math.random() * 400), y: 0 }, 20 + (Math.random() * 20), 20 + (Math.random() * 20), 1, 0.5, 1);
-            physics.setRotation(box, Math.random() * Math.PI * 2);
-            physics.addBody(world, box);
-        }
-    }
-    for (const body of world.dynamicBodies) {
-        if (body.center.y > 600) {
-            physics.removeBody(world, body);
-        }
-    }
-    frameCount++;
-}
-// simple joints
-export function example4() {
-    world = physics.createWorld();
-    for (let i = 0; i < 3; i++) {
-        const rect = physics.createRectangle(world, { x: 150 + (i * 70), y: 50 }, 30, 30, 0, 0, 0.5);
-        physics.addBody(world, rect);
-        const circle = physics.createCircle(world, { x: 150 + (i * 70), y: 250 }, 20, 1, 0, 0.5);
-        physics.addBody(world, circle);
-        const joint = physics.createJoint(world, rect, circle, 0.5, 0.5);
-        if (i === 0) {
-            circle.velocity.x = -150;
-        }
-    }
-}
-// jointed car
-export function example5() {
-    world = physics.createWorld({ x: 0, y: 300 });
-    let rect = physics.createRectangle(world, { x: 150, y: 80 }, 400, 30, 0, 0.5, 0.5);
-    physics.rotateBody(rect, Math.PI / 6);
-    physics.addBody(world, rect);
-    rect = physics.createRectangle(world, { x: 350, y: 250 }, 400, 30, 0, 0.5, 0.5);
-    physics.rotateBody(rect, -Math.PI / 8);
-    physics.addBody(world, rect);
-    rect = physics.createRectangle(world, { x: 150, y: 420 }, 400, 30, 0, 0.5, 0.5);
-    physics.rotateBody(rect, Math.PI / 8);
-    physics.addBody(world, rect);
-    const circle1 = physics.createCircle(world, { x: 50, y: 0 }, 15, 3, 0.5, 1);
-    physics.addBody(world, circle1);
-    const circle2 = physics.createCircle(world, { x: 90, y: 0 }, 15, 3, 0.5, 1);
-    physics.addBody(world, circle2);
-    physics.createJoint(world, circle1, circle2, 0.5, 0.5);
-}
 function render() {
     requestAnimationFrame(render);
     physics.worldStep(60, world);
     if (currentDemo.update) {
-        currentDemo.update();
+        currentDemo.update(world);
     }
     ctx.lineWidth = 3;
     ctx.clearRect(0, 0, 500, 500);
@@ -115,7 +36,7 @@ function render() {
         if (body.static) {
             ctx.strokeStyle = "grey";
         }
-        else if (body.restingTime > 1) {
+        else if (body.restingTime > world.restTime) {
             ctx.strokeStyle = "green";
         }
         if (body.type === physics.ShapeType.CIRCLE) {
@@ -146,14 +67,15 @@ export function selectDemo() {
     restart();
 }
 export function restart() {
-    currentDemo.init();
+    world = currentDemo.init();
 }
 const DEMOS = [
-    { name: "Simple", init: example1 },
-    { name: "Stacks", init: example2 },
-    { name: "Pile", init: example3, update: example3Update },
-    { name: "Joints", init: example4 },
-    { name: "Car", init: example5 },
+    { name: "Simple", init: simpleInit },
+    { name: "Stacks", init: stackInit },
+    { name: "Pile", init: pileInit, update: pileUpdate },
+    { name: "Joints", init: jointsInit },
+    { name: "Car", init: carInit },
+    { name: "Upset Avians", init: avianInit },
 ];
 const demoList = document.getElementById("demo");
 for (const demo of DEMOS) {
