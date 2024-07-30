@@ -24,7 +24,7 @@ More added as time permits.
 
 ## Dusk Compatible
 
-This was built to support physics in networked game on the [Dusk Platform](https://developers.dusk.gg)
+This was built to support physics in networked games on the [Dusk Platform](https://developers.dusk.gg)
 
 ## Credits
 
