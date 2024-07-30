@@ -22,6 +22,11 @@ in serializable structures with functions/resolvers outside of the data.
 
 More added as time permits.
 
+## Dusk Compatible
+
+This was built to support physics in networked game on the [Dusk Platform](https://developers.dusk.gg)
+
 ## Credits
 
-This project started as a port and clean up of: https://github.com/xem/mini2Dphysics/tree/gh-pages
+* This project started as a port and clean up of: https://github.com/xem/mini2Dphysics/tree/gh-pages
+* Bjarke Felbo also contributed to the original source: https://github.com/bfelbo
