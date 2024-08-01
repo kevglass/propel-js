@@ -5,11 +5,24 @@ import { pileInit, pileUpdate } from "./examples/Pile.js";
 import { jointsInit } from "./examples/Joints.js";
 import { carInit } from "./examples/Car.js";
 import { avianInit } from "./examples/Avian.js";
+import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 canvas.width = 500;
 canvas.height = 500;
+
+window.addEventListener("keydown", (e) => {
+    if (currentDemo.input) {
+        currentDemo.input(world, e.key, true);
+    }
+});
+
+window.addEventListener("keyup", (e) => {
+    if (currentDemo.input) {
+        currentDemo.input(world, e.key, false);
+    }
+});
 
 document.getElementById("demo").addEventListener("change", selectDemo);
 document.getElementById("restart").addEventListener("click", restart);
@@ -18,23 +31,23 @@ let world;
 let currentDemo;
 
 export type DemoInit = () => physics.World;
-export type DemoUpdate = (world: physics.World) => void;
-export type DemoClick = (world: physics.World, x: number, y: number) => void;
+export type DemoUpdate = (world: physics.World, collisions: physics.Collision[]) => void;
+export type DemoInput = (world: physics.World, input: string, on: boolean) => void;
 
 export interface Demo {
     name: string;
     init: DemoInit;
     update?: DemoUpdate;
-    click?: DemoClick;
+    input?: DemoInput;
 }
 
 
 function render() {
     requestAnimationFrame(render);
-    physics.worldStep(60, world);
+    const collisions = physics.worldStep(60, world);
 
     if (currentDemo.update) {
-        currentDemo.update(world);
+        currentDemo.update(world, collisions);
     }
 
     ctx.lineWidth = 3;
@@ -95,6 +108,7 @@ export function restart() {
 } 
 
 const DEMOS: Demo[] = [
+    { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },

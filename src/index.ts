@@ -129,6 +129,10 @@ export namespace physics {
         inertia: number,
         /** The amount of time this body has been resting for */
         restingTime: number;
+        /** True if this body can not rotate */
+        fixedRotation: boolean;
+        /** True if this body can not move */
+        fixedPosition: boolean;
     }
 
     export type Body = StaticRigidBody | DynamicRigidBody
@@ -438,10 +442,20 @@ export namespace physics {
                 continue;
             }
             // Update position/rotation
-            body.velocity = addVec2(body.velocity, scaleVec2(body.acceleration, 1 / fps));
-            _moveBody(body, scaleVec2(body.velocity, 1 / fps));
-            body.angularVelocity += body.angularAcceleration * 1 / fps;
-            rotateBody(body, body.angularVelocity * 1 / fps);
+            if (!body.fixedPosition) {
+                body.velocity = addVec2(body.velocity, scaleVec2(body.acceleration, 1 / fps));
+                _moveBody(body, scaleVec2(body.velocity, 1 / fps));
+            } else {
+                body.velocity.x = 0;
+                body.velocity.y = 0;
+            }
+            if (!body.fixedRotation) {
+                body.angularVelocity += body.angularAcceleration * 1 / fps;
+                rotateBody(body, body.angularVelocity * 1 / fps);
+            } else {
+                body.angularVelocity = 0;
+                body.angularAcceleration = 0;
+            }
         }
 
         // apply velocity to try and maintain joints
@@ -752,6 +766,8 @@ export namespace physics {
                 angularAcceleration: 0, // angle acceleration,
                 inertia: calculateInertia(type, mass, bounds, width, height),
                 restingTime: 0,
+                fixedPosition: false,
+                fixedRotation: false
             }
             return dynamicBody
         }
@@ -1125,12 +1141,20 @@ export namespace physics {
         // impulse = F dt = m * ?v
         // ?v = impulse / m
         if (!s1.static) {
-            s1.velocity = subtractVec2(s1.velocity, scaleVec2(impulse, s1.mass));
-            s1.angularVelocity -= R1crossN * jN * s1.inertia;
+            if (!s1.fixedPosition) {
+                s1.velocity = subtractVec2(s1.velocity, scaleVec2(impulse, s1.mass));
+            }
+            if (!s1.fixedRotation) {
+                s1.angularVelocity -= R1crossN * jN * s1.inertia;
+            }
         }
         if (!s2.static) {
-            s2.velocity = addVec2(s2.velocity, scaleVec2(impulse, s2.mass));
-            s2.angularVelocity += R2crossN * jN * s2.inertia;
+            if (!s2.fixedPosition) {
+                s2.velocity = addVec2(s2.velocity, scaleVec2(impulse, s2.mass));
+            }
+            if (!s2.fixedRotation) {
+                s2.angularVelocity += R2crossN * jN * s2.inertia;
+            }
         }
 
         const

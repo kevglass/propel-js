@@ -104,6 +104,10 @@ export declare namespace physics {
         inertia: number;
         /** The amount of time this body has been resting for */
         restingTime: number;
+        /** True if this body can not rotate */
+        fixedRotation: boolean;
+        /** True if this body can not move */
+        fixedPosition: boolean;
     }
     export type Body = StaticRigidBody | DynamicRigidBody;
     /**
