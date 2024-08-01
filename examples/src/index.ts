@@ -108,13 +108,13 @@ export function restart() {
 } 
 
 const DEMOS: Demo[] = [
-    { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
     { name: "Joints", init: jointsInit },
     { name: "Car", init: carInit },
     { name: "Upset Avians", init: avianInit },
+    { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
 ];
 
 const demoList = document.getElementById("demo");
