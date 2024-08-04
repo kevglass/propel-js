@@ -1,6 +1,8 @@
 import { physics } from "../../../dist/index.js";
 export function stackInit() {
     const world = physics.createWorld();
+    // dampen the physics so they come to rest more easily
+    world.damp = 0.999;
     world.restTime = 0.25;
     const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, 0.5);
     physics.addBody(world, rect);

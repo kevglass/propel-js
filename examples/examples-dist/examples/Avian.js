@@ -1,6 +1,7 @@
 import { physics } from "../../../dist/index.js";
 export function avianInit() {
     const world = physics.createWorld({ x: 0, y: 300 });
+    world.damp = 0.98;
     world.restTime = 10;
     const friction = 0.5;
     const rest = 0.5;
