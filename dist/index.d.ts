@@ -11,6 +11,31 @@ export declare namespace physics {
         /** A rectangle shape */
         RECTANGLE = 1
     }
+    export type Shape = Rectangle | Circle;
+    export type BaseShape = {
+        /** The radius of a bounding circle around the body */
+        bounds: number;
+        /** The boding box around the body - used for efficient bounds tests */
+        boundingBox: Vector2;
+        /** The center of the body */
+        center: Vector2;
+        /** The shape type of the body */
+        type: ShapeType;
+    };
+    export type Circle = {
+        type: ShapeType.CIRCLE;
+    } & BaseShape;
+    export type Rectangle = {
+        type: ShapeType.RECTANGLE;
+        /** The width of the body if its a rectangle */
+        width: number;
+        /** The height of the body if its a rectangle */
+        height: number;
+        /** The normals of the faces of the rectangle */
+        faceNormals: Vector2[];
+        /** The vertices of the corners of the rectangle */
+        vertices: Vector2[];
+    } & BaseShape;
     /**
      * Two dimension vector
      */
@@ -49,32 +74,19 @@ export declare namespace physics {
     interface BodyCore {
         /** The unique ID of this body */
         id: number;
-        /** The shape type of the body */
-        type: ShapeType;
-        /** The center of the body */
-        center: Vector2;
+        shapes: Shape[];
         /** The friction to apply for this body in a collision */
         friction: number;
         /** The restitution to apply for this body in a collision */
         restitution: number;
-        /** The radius of a bounding circle around the body */
-        bounds: number;
         /** User data associated with the body  */
         data: any;
         /** Permeability of the object - anything other than zero will stop collision response */
         permeability: number;
-        /** The boding box around the body - used for efficient bounds tests */
-        boundingBox: Vector2;
-        /** The width of the body if its a rectangle */
-        width: number;
-        /** The height of the body if its a rectangle */
-        height: number;
+        /** The center of the body */
+        center: Vector2;
         /** The current angle of rotation of the body */
         angle: number;
-        /** The normals of the faces of the rectangle */
-        faceNormals: Vector2[];
-        /** The vertices of the corners of the rectangle */
-        vertices: Vector2[];
         /** True if this body is static - i.e. it doesn't moved or rotate */
         static: boolean;
     }
@@ -108,6 +120,8 @@ export declare namespace physics {
         fixedRotation: boolean;
         /** True if this body can not move */
         fixedPosition: boolean;
+        /** The center of rotation based on the last collision */
+        centerOfPhysics: Vector2;
     }
     export type Body = StaticRigidBody | DynamicRigidBody;
     /**
@@ -213,9 +227,9 @@ export declare namespace physics {
      * @param body The body to move
      * @param v The amount to move
      */
-    export function moveBody(body: DynamicRigidBody, v: Vector2): void;
+    export function moveBody(body: Body, v: Vector2): void;
     export function setCenter(body: Body, v: Vector2): void;
-    export function setRotation(body: DynamicRigidBody, angle: number): void;
+    export function setRotation(body: Body, angle: number): void;
     /**
      * Rotate a body around its center
      *
@@ -310,6 +324,9 @@ export declare namespace physics {
      * @returns The newly created normalized vector
      */
     export function normalize(v: Vector2): Vector2;
+    export function createCircleShape(center: Vector2, radius: number): Circle;
+    export function createRectangleShape(center: Vector2, width: number, height: number): Rectangle;
+    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body;
     /**
      * Add a body to the world
      *

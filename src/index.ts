@@ -17,6 +17,35 @@ export namespace physics {
         RECTANGLE = 1,
     }
 
+    export type Shape = Rectangle | Circle;
+
+    export type BaseShape = {
+        /** The radius of a bounding circle around the body */
+        bounds: number,
+        /** The boding box around the body - used for efficient bounds tests */
+        boundingBox: Vector2,
+        /** The center of the body */
+        center: Vector2,
+        /** The shape type of the body */
+        type: ShapeType,
+    }
+
+    export type Circle = {
+        type: ShapeType.CIRCLE;
+    } & BaseShape;
+
+    export type Rectangle = {
+        type: ShapeType.RECTANGLE;
+        /** The width of the body if its a rectangle */
+        width: number,
+        /** The height of the body if its a rectangle */
+        height: number,
+        /** The normals of the faces of the rectangle */
+        faceNormals: Vector2[]
+        /** The vertices of the corners of the rectangle */
+        vertices: Vector2[],
+    } & BaseShape;
+
     /**
      * Two dimension vector
      */
@@ -55,6 +84,10 @@ export namespace physics {
         start: Vector2;
         /** The ending point of the collision */
         end: Vector2;
+        /** The first shape */
+        shapeA?: Shape;
+        /** The second shape */
+        shapeB?: Shape;
     }
 
     /**
@@ -72,32 +105,19 @@ export namespace physics {
     interface BodyCore {
         /** The unique ID of this body */
         id: number;
-        /** The shape type of the body */
-        type: ShapeType,
-        /** The center of the body */
-        center: Vector2,
+        shapes: Shape[];
         /** The friction to apply for this body in a collision */
         friction: number,
         /** The restitution to apply for this body in a collision */
         restitution: number,
-        /** The radius of a bounding circle around the body */
-        bounds: number,
         /** User data associated with the body  */
         data: any;
         /** Permeability of the object - anything other than zero will stop collision response */
         permeability: number;
-        /** The boding box around the body - used for efficient bounds tests */
-        boundingBox: Vector2,
-        /** The width of the body if its a rectangle */
-        width: number,
-        /** The height of the body if its a rectangle */
-        height: number,
+        /** The center of the body */
+        center: Vector2,
         /** The current angle of rotation of the body */
         angle: number,
-        /** The normals of the faces of the rectangle */
-        faceNormals: Vector2[]
-        /** The vertices of the corners of the rectangle */
-        vertices: Vector2[],
         /** True if this body is static - i.e. it doesn't moved or rotate */
         static: boolean;
     }
@@ -133,6 +153,8 @@ export namespace physics {
         fixedRotation: boolean;
         /** True if this body can not move */
         fixedPosition: boolean;
+        /** The center of rotation based on the last collision */
+        centerOfPhysics: Vector2;
     }
 
     export type Body = StaticRigidBody | DynamicRigidBody
@@ -231,22 +253,24 @@ export namespace physics {
             };
         }
 
-        const body: Body = bodies[0];
-        let min = newVec2(body.center.x - body.bounds, body.center.y - body.bounds);
-        let max = newVec2(body.center.x + body.bounds, body.center.y + body.bounds);
+        const firstBody: Body = bodies[0];
+        let min = newVec2(firstBody.shapes[0].center.x - firstBody.shapes[0].bounds, firstBody.center.y - firstBody.shapes[0].bounds);
+        let max = newVec2(firstBody.shapes[0].center.x + firstBody.shapes[0].bounds, firstBody.center.y + firstBody.shapes[0].bounds);
 
-        for (const body of bodies) {
-            if (body.type === ShapeType.CIRCLE) {
-                min.x = Math.min(min.x, body.center.x - body.bounds);
-                min.y = Math.min(min.y, body.center.y - body.bounds);
-                max.x = Math.max(max.x, body.center.x + body.bounds);
-                max.y = Math.max(max.y, body.center.y + body.bounds);
-            } else if (body.type === ShapeType.RECTANGLE) {
-                for (const vert of body.vertices) {
-                    min.x = Math.min(min.x, vert.x);
-                    min.y = Math.min(min.y, vert.y);
-                    max.x = Math.max(max.x, vert.x);
-                    max.y = Math.max(max.y, vert.y);
+        for (const b of bodies) {
+            for (const shape of b.shapes) {
+                if (shape.type === ShapeType.CIRCLE) {
+                    min.x = Math.min(min.x, shape.center.x - shape.bounds);
+                    min.y = Math.min(min.y, shape.center.y - shape.bounds);
+                    max.x = Math.max(max.x, shape.center.x + shape.bounds);
+                    max.y = Math.max(max.y, shape.center.y + shape.bounds);
+                } else if (shape.type === ShapeType.RECTANGLE) {
+                    for (const vert of shape.vertices) {
+                        min.x = Math.min(min.x, vert.x);
+                        min.y = Math.min(min.y, vert.y);
+                        max.x = Math.max(max.x, vert.x);
+                        max.y = Math.max(max.y, vert.y);
+                    }
                 }
             }
         }
@@ -308,12 +332,9 @@ export namespace physics {
      * @returns The newly created body
      */
     export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, data?: any): Body {
-        // the original code only works well with whole number static objects
-        center.x = Math.floor(center.x);
-        center.y = Math.floor(center.y);
-        radius = Math.floor(radius);
+        const circle = createCircleShape(center, radius);
 
-        return createRigidBody(world, center, mass, friction, restitution, 0, radius, undefined, undefined, data);
+        return createRigidBody(world, center, mass, friction, restitution, [circle], data);
     };
 
     /**
@@ -329,13 +350,9 @@ export namespace physics {
      * @returns The newly created body
      */
     export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, data?: any): Body {
-        // the original code only works well with whole number static objects
-        center.x = Math.floor(center.x);
-        center.y = Math.floor(center.y);
-        width = Math.floor(width);
-        height = Math.floor(height);
+        const rect = createRectangleShape(center, width, height);
 
-        return createRigidBody(world, center, mass, friction, restitution, 1, Math.hypot(width, height) / 2, width, height, data);
+        return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     };
 
     /**
@@ -344,11 +361,11 @@ export namespace physics {
      * @param body The body to move
      * @param v The amount to move
      */
-    export function moveBody(body: DynamicRigidBody, v: Vector2): void {
+    export function moveBody(body: Body, v: Vector2): void {
         _moveBody(body, v, true);
     }
 
-    function _moveBody(body: DynamicRigidBody, v: Vector2, force = false): void {
+    function _moveBody(body: Body, v: Vector2, force = false): void {
         if (!force) {
             if (body.static) {
                 return;
@@ -357,43 +374,34 @@ export namespace physics {
 
         // Center
         body.center = addVec2(body.center, v);
-
-        // Rectangle (move vertex)
-        if (body.type === ShapeType.RECTANGLE) {
-            for (let i = 4; i--;) {
-                body.vertices[i] = addVec2(body.vertices[i], v);
+        if (!body.static) {
+            body.centerOfPhysics = addVec2(body.centerOfPhysics, v);
+        }
+        for (const shape of body.shapes) {
+            shape.center = addVec2(shape.center, v);
+            // Rectangle (move vertex)
+            if (shape.type === ShapeType.RECTANGLE) {
+                for (let i = 4; i--;) {
+                    shape.vertices[i] = addVec2(shape.vertices[i], v);
+                }
+                updateBoundingBox(shape);
             }
-            updateBoundingBox(body);
         }
     };
 
 
     export function setCenter(body: Body, v: Vector2): void {
-        // Center
-        body.center = v;
+        const diff = subtractVec2(v, body.center);
 
-        // Rectangle (move vertex)
-        if (body.type === ShapeType.RECTANGLE) {
-            for (let i = 4; i--;) {
-                body.vertices[i] = addVec2(body.vertices[i], v);
-            }
-            updateBoundingBox(body);
-        }
+        moveBody(body, diff);
     };
 
-    export function setRotation(body: DynamicRigidBody, angle: number): void {
-        // Update angle
-        body.angle = angle;
-        body.averageAngle = angle;
-
-        // Rectangle (rotate vertex)
-        if (body.type === ShapeType.RECTANGLE) {
-            for (let i = 4; i--;) {
-                body.vertices[i] = rotateVec2(body.vertices[i], body.center, angle);
-            }
-            updateRectNormals(body);
-            updateBoundingBox(body);
+    export function setRotation(body: Body, angle: number): void {
+        const diff = angle - body.angle;
+        if (!body.static) {
+            body.centerOfPhysics = {...body.center}
         }
+        rotateBody(body, diff);
     };
 
     /**
@@ -409,14 +417,22 @@ export namespace physics {
 
         // Update angle
         body.angle += angle;
+        if (!body.static) {
+            body.averageAngle = angle;
+        }
 
-        // Rectangle (rotate vertex)
-        if (body.type) {
-            for (let i = 4; i--;) {
-                body.vertices[i] = rotateVec2(body.vertices[i], body.center, angle);
+        const center = body.static ? body.center : body.centerOfPhysics;
+        body.center = rotateVec2(body.center, center, angle);
+        for (const shape of body.shapes) {
+            shape.center = rotateVec2(shape.center, center, angle);
+
+            if (shape.type === ShapeType.RECTANGLE) {
+                for (let i = 4; i--;) {
+                    shape.vertices[i] = rotateVec2(shape.vertices[i], center, angle);
+                }
+                updateRectNormals(shape);
+                updateBoundingBox(shape);
             }
-            updateRectNormals(body);
-            updateBoundingBox(body);
         }
     };
 
@@ -528,13 +544,32 @@ export namespace physics {
                                 continue;
                             }
 
+                            if (!bodyI.static) {
+                                if (bodyI.shapes.includes(collisionInfo.shapeA!)) {
+                                    bodyI.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                }
+                                if (bodyI.shapes.includes(collisionInfo.shapeB!)) {
+                                    bodyI.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                }
+                            }
+                            if (!bodyJ.static) {
+                                if (bodyJ.shapes.includes(collisionInfo.shapeA!)) {
+                                    bodyJ.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                }
+                                if (bodyJ.shapes.includes(collisionInfo.shapeB!)) {
+                                    bodyJ.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                }
+                            }
+
                             // Make sure the normal is always from object[i] to object[j]
                             if (dotProduct(collisionInfo.normal, subtractVec2(bodyJ.center, bodyI.center)) < 0) {
                                 collisionInfo = {
                                     depth: collisionInfo.depth,
                                     normal: scaleVec2(collisionInfo.normal, -1),
                                     start: collisionInfo.end,
-                                    end: collisionInfo.start
+                                    end: collisionInfo.start,
+                                    shapeA: collisionInfo.shapeB,
+                                    shapeB: collisionInfo.shapeA,
                                 };
                             }
 
@@ -697,54 +732,87 @@ export namespace physics {
             normal: newVec2(0, 0),
             start: newVec2(0, 0),
             end: newVec2(0, 0),
+            shapeA: undefined,
+            shapeB: undefined,
         }
     };
 
     // Collision info setter
-    function setCollisionInfo(collision: CollisionDetails, D: number, N: Vector2, S: Vector2) {
+    function setCollisionInfo(collision: CollisionDetails, D: number, N: Vector2, S: Vector2, A: Shape, B: Shape) {
+        if (D < collision.depth) {
+            return;
+        }
+
         collision.depth = D; // depth
         collision.normal.x = N.x; // normal
         collision.normal.y = N.y; // normal
         collision.start.x = S.x; // start
         collision.start.y = S.y; // start
         collision.end = addVec2(S, scaleVec2(N, D)); // end
+        collision.shapeA = A;
+        collision.shapeB = B;
     }
 
-    function calculateInertia(type: ShapeType, mass: number, bounds: number, width: number, height: number): number {
-        return type === ShapeType.RECTANGLE // inertia
-            ? (Math.hypot(width, height) / 2, mass > 0 ? 1 / (mass * (width ** 2 + height ** 2) / 12) : 0) // rectangle
-            : (mass > 0 ? (mass * bounds ** 2) / 12 : 0); // circle;
+    function calculateInertia(shapes: Shape[], mass: number): number {
+        let result = 0;
+
+        for (const shape of shapes) {
+            const total = shape.type === ShapeType.RECTANGLE // inertia
+                ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
+                : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;;
+
+            result += (total / shapes.length);
+        }
+
+        return result;
+    }
+
+    export function createCircleShape(center: Vector2, radius: number): Circle {
+        // the original code only works well with whole number static objects
+        center.x = Math.floor(center.x);
+        center.y = Math.floor(center.y);
+        radius = Math.floor(radius);
+
+        return {
+            type: ShapeType.CIRCLE,
+            center,
+            bounds: radius,
+            boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
+        }
+    }
+
+    export function createRectangleShape(center: Vector2, width: number, height: number): Rectangle {
+        // the original code only works well with whole number static objects
+        center.x = Math.floor(center.x);
+        center.y = Math.floor(center.y);
+        width = Math.floor(width);
+        height = Math.floor(height);
+
+        const vertices = [ // Vertex: 0: TopLeft, 1: TopRight, 2: BottomRight, 3: BottomLeft (rectangles)
+            newVec2(center.x - width / 2, center.y - height / 2),
+            newVec2(center.x + width / 2, center.y - height / 2),
+            newVec2(center.x + width / 2, center.y + height / 2),
+            newVec2(center.x - width / 2, center.y + height / 2)
+        ]
+        const faceNormals = computeRectNormals(vertices)
+        const bounds = Math.hypot(width, height) / 2;
+
+        return {
+            type: ShapeType.RECTANGLE,
+            width, height, center, vertices, faceNormals,
+            bounds,
+            boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
+        }
     }
 
     // New shape
-    function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, type: number, bounds: number, width = 0, height = 0, data?: any): Body {
-        // Prepare data for Rectangle
-        let vertices: Vector2[], faceNormals: Vector2[]
-        if (type === ShapeType.RECTANGLE) {
-            vertices = [ // Vertex: 0: TopLeft, 1: TopRight, 2: BottomRight, 3: BottomLeft (rectangles)
-                newVec2(center.x - width / 2, center.y - height / 2),
-                newVec2(center.x + width / 2, center.y - height / 2),
-                newVec2(center.x + width / 2, center.y + height / 2),
-                newVec2(center.x - width / 2, center.y + height / 2)
-            ]
-            faceNormals = computeRectNormals(vertices)
-        } else {
-            vertices = []
-            faceNormals = []
-        }
-
+    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body {
         const staticBody: StaticRigidBody = {
             id: world.nextId++,
-            type,
             center,
             friction,
             restitution,
-            bounds,
-            boundingBox: calcBoundingBox(type, bounds, vertices, center),
-            width,
-            height,
-            faceNormals,
-            vertices,
+            shapes,
             static: true,
             angle: 0,
             permeability: 0,
@@ -758,13 +826,14 @@ export namespace physics {
                 ...staticBody,
                 static: false,
                 averageCenter: newVec2(center.x, center.y),
+                centerOfPhysics: {...center},
                 mass: 1 / mass, // inverseMass
                 velocity: newVec2(0, 0), // velocity (speed)
                 acceleration: world.gravity, // acceleration
                 averageAngle: 0,
                 angularVelocity: 0, // angle velocity
                 angularAcceleration: 0, // angle acceleration,
-                inertia: calculateInertia(type, mass, bounds, width, height),
+                inertia: calculateInertia(shapes, mass),
                 restingTime: 0,
                 fixedPosition: false,
                 fixedRotation: false
@@ -803,18 +872,23 @@ export namespace physics {
 
     // Test if two shapes have intersecting bounding circles
     // TODO Need to optimize this for rectangles 
-    function boundTest(s1: Body, s2: Body) {
-        const coincideX = Math.abs(s1.center.x - s2.center.x) < s1.boundingBox.x + s2.boundingBox.x;
-        const coincideY = Math.abs(s1.center.y - s2.center.y) < s1.boundingBox.y + s2.boundingBox.y;
+    function boundTest(b1: Body, b2: Body) {
+        for (const s1 of b1.shapes) {
+            for (const s2 of b2.shapes) {
+                const coincideX = Math.abs(s1.center.x - s2.center.x) < s1.boundingBox.x + s2.boundingBox.x;
+                const coincideY = Math.abs(s1.center.y - s2.center.y) < s1.boundingBox.y + s2.boundingBox.y;
 
-        return coincideX && coincideY;
+                if (coincideX && coincideY) {
+                    return true;
+                }
+            }
+        }
 
-        // old bounds check
-        // return lengthVec2(subtractVec2(s2.center, s1.center)) <= s1.bounds + s2.bounds;
+        return false;
     }
 
-    function updateBoundingBox(body: Body): void {
-        body.boundingBox = calcBoundingBox(body.type, body.bounds, body.vertices, body.center)
+    function updateBoundingBox(shape: Shape): void {
+        shape.boundingBox = calcBoundingBox(shape.type, shape.bounds, shape.type === ShapeType.RECTANGLE ? shape.vertices : [], shape.center)
     }
 
     function calcBoundingBox(type: number, bounds: number, vertices: Vector2[], center: Vector2): Vector2 {
@@ -837,8 +911,8 @@ export namespace physics {
         }
     }
 
-    function updateRectNormals(body: Body) {
-        body.faceNormals = computeRectNormals(body.vertices)
+    function updateRectNormals(rect: Rectangle) {
+        rect.faceNormals = computeRectNormals(rect.vertices)
     }
 
     // Compute face normals (for rectangles)
@@ -856,7 +930,7 @@ export namespace physics {
     }
 
     // Find the axis of least penetration between two rects
-    function findAxisLeastPenetration(rect: Body, otherRect: Body, collisionInfo: CollisionDetails) {
+    function findAxisLeastPenetration(rect: Rectangle, otherRect: Rectangle, collisionInfo: CollisionDetails) {
         let n,
             i,
             j,
@@ -906,7 +980,7 @@ export namespace physics {
         }
         if (hasSupport) {
             // all four directions have support point
-            setCollisionInfo(collisionInfo, bestDistance, rect.faceNormals[bestIndex], addVec2(supportPoint as Vector2, scaleVec2(rect.faceNormals[bestIndex], bestDistance)));
+            setCollisionInfo(collisionInfo, bestDistance, rect.faceNormals[bestIndex], addVec2(supportPoint as Vector2, scaleVec2(rect.faceNormals[bestIndex], bestDistance)), rect, otherRect);
         }
 
         return hasSupport;
@@ -921,154 +995,161 @@ export namespace physics {
     }
 
     // Test collision between two shapes
-    function testCollision(world: World, c1: Body, c2: Body, collisionInfo: CollisionDetails): boolean {
+    function testCollision(world: World, b1: Body, b2: Body, collisionInfo: CollisionDetails): boolean {
         // static bodies don't collide with each other
-        if ((bodyAtRest(world, c1) && bodyAtRest(world, c2))) {
+        if ((bodyAtRest(world, b1) && bodyAtRest(world, b2))) {
             return false;
         }
 
-        // Circle vs circle
-        if (c1.type == ShapeType.CIRCLE && c2.type === ShapeType.CIRCLE) {
-            const
-                vFrom1to2 = subtractVec2(c2.center, c1.center),
-                rSum = c1.bounds + c2.bounds,
-                dist = lengthVec2(vFrom1to2);
+        for (let c1 of b1.shapes) {
+            for (let c2 of b2.shapes) {
 
-            if (dist <= Math.sqrt(rSum * rSum)) {
-                const normalFrom2to1 = normalize(scaleVec2(vFrom1to2, -1)),
-                    radiusC2 = scaleVec2(normalFrom2to1, c2.bounds);
-                setCollisionInfo(collisionInfo, rSum - dist, normalize(vFrom1to2), addVec2(c2.center, radiusC2));
+                // Circle vs circle
+                if (c1.type == ShapeType.CIRCLE && c2.type === ShapeType.CIRCLE) {
+                    const
+                        vFrom1to2 = subtractVec2(c2.center, c1.center),
+                        rSum = c1.bounds + c2.bounds,
+                        dist = lengthVec2(vFrom1to2);
 
-                return true;
-            }
+                    if (dist <= Math.sqrt(rSum * rSum)) {
+                        const normalFrom2to1 = normalize(scaleVec2(vFrom1to2, -1)),
+                            radiusC2 = scaleVec2(normalFrom2to1, c2.bounds);
+                        setCollisionInfo(collisionInfo, rSum - dist, normalize(vFrom1to2), addVec2(c2.center, radiusC2), c1, c2);
 
-            return false;
-        }
-
-        // Rect vs Rect
-        if (c1.type == ShapeType.RECTANGLE && c2.type == ShapeType.RECTANGLE) {
-            let status1 = false,
-                status2 = false;
-
-            // find Axis of Separation for both rectangles
-            const collisionInfoR1 = EmptyCollision();
-            status1 = findAxisLeastPenetration(c1, c2, collisionInfoR1);
-            if (status1) {
-                const collisionInfoR2 = EmptyCollision();
-                status2 = findAxisLeastPenetration(c2, c1, collisionInfoR2);
-                if (status2) {
-
-                    // if both of rectangles are overlapping, choose the shorter normal as the normal     
-                    if (collisionInfoR1.depth < collisionInfoR2.depth) {
-                        setCollisionInfo(collisionInfo, collisionInfoR1.depth, collisionInfoR1.normal,
-                            subtractVec2(collisionInfoR1.start, scaleVec2(collisionInfoR1.normal, collisionInfoR1.depth)));
-                        return true;
+                        continue;
                     }
-                    else {
-                        setCollisionInfo(collisionInfo, collisionInfoR2.depth, scaleVec2(collisionInfoR2.normal, -1), collisionInfoR2.start);
-                        return true;
-                    }
-                }
-            }
 
-            return false;
-        }
-
-        // Rectangle vs Circle
-        // (c1 is the rectangle and c2 is the circle, invert the two if needed)
-        if (c1.type === ShapeType.CIRCLE && c2.type === ShapeType.RECTANGLE) {
-            [c1, c2] = [c2, c1];
-        }
-
-        if (c1.type === ShapeType.RECTANGLE && c2.type === ShapeType.CIRCLE) {
-            let inside = 1,
-                bestDistance = -1e9,
-                nearestEdge = 0,
-                i, v,
-                circ2Pos: Vector2 | undefined, projection;
-            for (i = 4; i--;) {
-
-                // find the nearest face for center of circle    
-                circ2Pos = c2.center;
-                v = subtractVec2(circ2Pos, c1.vertices[i]);
-                projection = dotProduct(v, c1.faceNormals[i]);
-                if (projection > 0) {
-
-                    // if the center of circle is outside of c1angle
-                    bestDistance = projection;
-                    nearestEdge = i;
-                    inside = 0;
-                    break;
+                    continue;
                 }
 
-                if (projection > bestDistance) {
-                    bestDistance = projection;
-                    nearestEdge = i;
-                }
-            }
-            let dis, normal;
+                // Rect vs Rect
+                if (c1.type == ShapeType.RECTANGLE && c2.type == ShapeType.RECTANGLE) {
+                    let status1 = false,
+                        status2 = false;
 
-            if (inside && circ2Pos) {
-                // the center of circle is inside of c1angle
-                setCollisionInfo(collisionInfo, c2.bounds - bestDistance, c1.faceNormals[nearestEdge], subtractVec2(circ2Pos, scaleVec2(c1.faceNormals[nearestEdge], c2.bounds)));
-                return true;
-            }
-            else if (circ2Pos) {
+                    // find Axis of Separation for both rectangles
+                    const collisionInfoR1 = EmptyCollision();
+                    status1 = findAxisLeastPenetration(c1, c2, collisionInfoR1);
+                    if (status1) {
+                        const collisionInfoR2 = EmptyCollision();
+                        status2 = findAxisLeastPenetration(c2, c1, collisionInfoR2);
+                        if (status2) {
 
-                // the center of circle is outside of c1angle
-                // v1 is from left vertex of face to center of circle 
-                // v2 is from left vertex of face to right vertex of face
-                let
-                    v1 = subtractVec2(circ2Pos, c1.vertices[nearestEdge]),
-                    v2 = subtractVec2(c1.vertices[(nearestEdge + 1) % 4], c1.vertices[nearestEdge]),
-                    dotp = dotProduct(v1, v2);
-                if (dotp < 0) {
-
-                    // the center of circle is in corner region of X[nearestEdge]
-                    dis = lengthVec2(v1);
-
-                    // compare the distance with radium to decide collision
-                    if (dis > c2.bounds) {
-                        return false;
-                    }
-                    normal = normalize(v1);
-                    setCollisionInfo(collisionInfo, c2.bounds - dis, normal, addVec2(circ2Pos, scaleVec2(normal, -c2.bounds)));
-                    return true;
-                }
-                else {
-
-                    // the center of circle is in corner region of X[nearestEdge+1]
-                    // v1 is from right vertex of face to center of circle 
-                    // v2 is from right vertex of face to left vertex of face
-                    v1 = subtractVec2(circ2Pos, c1.vertices[(nearestEdge + 1) % 4]);
-                    v2 = scaleVec2(v2, -1);
-                    dotp = dotProduct(v1, v2);
-                    if (dotp < 0) {
-                        dis = lengthVec2(v1);
-
-                        // compare the distance with radium to decide collision
-                        if (dis > c2.bounds) {
-                            return false;
-                        }
-                        normal = normalize(v1);
-                        setCollisionInfo(collisionInfo, c2.bounds - dis, normal, addVec2(circ2Pos, scaleVec2(normal, -c2.bounds)));
-                        return true;
-                    } else {
-
-                        // the center of circle is in face region of face[nearestEdge]
-                        if (bestDistance < c2.bounds) {
-                            setCollisionInfo(collisionInfo, c2.bounds - bestDistance, c1.faceNormals[nearestEdge], subtractVec2(circ2Pos, scaleVec2(c1.faceNormals[nearestEdge], c2.bounds)));
-                            return true;
-                        } else {
-                            return false;
+                            // if both of rectangles are overlapping, choose the shorter normal as the normal     
+                            if (collisionInfoR1.depth < collisionInfoR2.depth) {
+                                setCollisionInfo(collisionInfo, collisionInfoR1.depth, collisionInfoR1.normal,
+                                    subtractVec2(collisionInfoR1.start, scaleVec2(collisionInfoR1.normal, collisionInfoR1.depth)), collisionInfoR1.shapeA!, collisionInfoR2.shapeB!);
+                                continue;
+                            }
+                            else {
+                                setCollisionInfo(collisionInfo, collisionInfoR2.depth, scaleVec2(collisionInfoR2.normal, -1), collisionInfoR2.start, collisionInfoR2.shapeB!, collisionInfoR2.shapeA!);
+                                continue;
+                            }
                         }
                     }
+
+                    continue;
                 }
+
+                // Rectangle vs Circle
+                // (c1 is the rectangle and c2 is the circle, invert the two if needed)
+                if (c1.type === ShapeType.CIRCLE && c2.type === ShapeType.RECTANGLE) {
+                    [c1, c2] = [c2, c1];
+                }
+
+                if (c1.type === ShapeType.RECTANGLE && c2.type === ShapeType.CIRCLE) {
+                    let inside = 1,
+                        bestDistance = -1e9,
+                        nearestEdge = 0,
+                        i, v,
+                        circ2Pos: Vector2 | undefined, projection;
+                    for (i = 4; i--;) {
+
+                        // find the nearest face for center of circle    
+                        circ2Pos = c2.center;
+                        v = subtractVec2(circ2Pos, c1.vertices[i]);
+                        projection = dotProduct(v, c1.faceNormals[i]);
+                        if (projection > 0) {
+
+                            // if the center of circle is outside of c1angle
+                            bestDistance = projection;
+                            nearestEdge = i;
+                            inside = 0;
+                            break;
+                        }
+
+                        if (projection > bestDistance) {
+                            bestDistance = projection;
+                            nearestEdge = i;
+                        }
+                    }
+                    let dis, normal;
+
+                    if (inside && circ2Pos) {
+                        // the center of circle is inside of c1angle
+                        setCollisionInfo(collisionInfo, c2.bounds - bestDistance, c1.faceNormals[nearestEdge], subtractVec2(circ2Pos, scaleVec2(c1.faceNormals[nearestEdge], c2.bounds)), c1, c2);
+                        continue;
+                    }
+                    else if (circ2Pos) {
+
+                        // the center of circle is outside of c1angle
+                        // v1 is from left vertex of face to center of circle 
+                        // v2 is from left vertex of face to right vertex of face
+                        let
+                            v1 = subtractVec2(circ2Pos, c1.vertices[nearestEdge]),
+                            v2 = subtractVec2(c1.vertices[(nearestEdge + 1) % 4], c1.vertices[nearestEdge]),
+                            dotProd = dotProduct(v1, v2);
+                        if (dotProd < 0) {
+
+                            // the center of circle is in corner region of X[nearestEdge]
+                            dis = lengthVec2(v1);
+
+                            // compare the distance with radium to decide collision
+                            if (dis > c2.bounds) {
+                                continue;
+                            }
+                            normal = normalize(v1);
+                            setCollisionInfo(collisionInfo, c2.bounds - dis, normal, addVec2(circ2Pos, scaleVec2(normal, -c2.bounds)), c1, c2);
+                            continue;
+                        }
+                        else {
+
+                            // the center of circle is in corner region of X[nearestEdge+1]
+                            // v1 is from right vertex of face to center of circle 
+                            // v2 is from right vertex of face to left vertex of face
+                            v1 = subtractVec2(circ2Pos, c1.vertices[(nearestEdge + 1) % 4]);
+                            v2 = scaleVec2(v2, -1);
+                            dotProd = dotProduct(v1, v2);
+                            if (dotProd < 0) {
+                                dis = lengthVec2(v1);
+
+                                // compare the distance with radium to decide collision
+                                if (dis > c2.bounds) {
+                                    continue;
+                                }
+                                normal = normalize(v1);
+                                setCollisionInfo(collisionInfo, c2.bounds - dis, normal, addVec2(circ2Pos, scaleVec2(normal, -c2.bounds)), c1, c2);
+                                continue;
+                            } else {
+
+                                // the center of circle is in face region of face[nearestEdge]
+                                if (bestDistance < c2.bounds) {
+                                    setCollisionInfo(collisionInfo, c2.bounds - bestDistance, c1.faceNormals[nearestEdge], subtractVec2(circ2Pos, scaleVec2(c1.faceNormals[nearestEdge], c2.bounds)), c1, c2);
+
+                                    continue;
+                                } else {
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+
             }
-            return false;
         }
 
-        return false;
+        return collisionInfo.depth > 0;
     }
 
     function resolveCollision(world: World, s1: Body, s2: Body, collisionInfo: CollisionDetails): boolean {
@@ -1084,13 +1165,14 @@ export namespace physics {
 
         // correct positions
         const
-            num = collisionInfo.depth / (mass1 + mass2) * .8, // .8 = poscorrectionrate = percentage of separation to project objects
+            num = collisionInfo.depth / (mass1 + mass2) * .8, // .8 = pos correction rate = percentage of separation to project objects
             correctionAmount = scaleVec2(collisionInfo.normal, num),
             n = collisionInfo.normal;
 
         if (correctionAmount.x === 0 && correctionAmount.y === 0) {
             return false;
         }
+
 
         if (!s1.static) {
             _moveBody(s1, scaleVec2(correctionAmount, -mass1));
@@ -1100,14 +1182,14 @@ export namespace physics {
         }
 
         // the direction of collisionInfo is always from s1 to s2
-        // but the Mass is inversed, so start scale with s2 and end scale with s1
+        // but the Mass is inverse, so start scale with s2 and end scale with s1
         const
             start = scaleVec2(collisionInfo.start, mass2 / (mass1 + mass2)),
             end = scaleVec2(collisionInfo.end, mass1 / (mass1 + mass2)),
             p = addVec2(start, end),
             // r is vector from center of object to collision point
-            r1 = subtractVec2(p, s1.center),
-            r2 = subtractVec2(p, s2.center),
+            r1 = subtractVec2(p, s1.static ? s1.center : s1.centerOfPhysics),
+            r2 = subtractVec2(p, s2.static ? s2.center : s2.centerOfPhysics),
 
             // newV = V + v cross R
             v1 = !s1.static ? addVec2(s1.velocity, newVec2(-1 * s1.angularVelocity * r1.y, s1.angularVelocity * r1.x)) : newVec2(0, 0),
@@ -1124,7 +1206,7 @@ export namespace physics {
 
         // compute and apply response impulses for each object  
         const
-            newRestituion = Math.min(s1.restitution, s2.restitution),
+            newRestitution = Math.min(s1.restitution, s2.restitution),
             newFriction = Math.min(s1.friction, s2.friction),
 
             // R cross N
@@ -1133,7 +1215,7 @@ export namespace physics {
 
             // Calc impulse scalar
             // the formula of jN can be found in http://www.myphysicslab.com/collision.html
-            jN = (-(1 + newRestituion) * rVelocityInNormal) / (mass1 + mass2 + R1crossN * R1crossN * inertia1 + R2crossN * R2crossN * inertia2);
+            jN = (-(1 + newRestitution) * rVelocityInNormal) / (mass1 + mass2 + R1crossN * R1crossN * inertia1 + R2crossN * R2crossN * inertia2);
         let
             // impulse is in direction of normal ( from s1 to s2)
             impulse = scaleVec2(n, jN);
@@ -1162,7 +1244,7 @@ export namespace physics {
             R1crossT = crossProduct(r1, tangent),
             R2crossT = crossProduct(r2, tangent);
         let
-            jT = (-(1 + newRestituion) * dotProduct(relativeVelocity, tangent) * newFriction) / (mass1 + mass2 + R1crossT * R1crossT * inertia1 + R2crossT * R2crossT * inertia2);
+            jT = (-(1 + newRestitution) * dotProduct(relativeVelocity, tangent) * newFriction) / (mass1 + mass2 + R1crossT * R1crossT * inertia1 + R2crossT * R2crossT * inertia2);
 
         // friction should less than force in normal direction
         if (jT > jN) {

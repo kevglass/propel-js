@@ -6,6 +6,7 @@ import { jointsInit } from "./examples/Joints.js";
 import { carInit } from "./examples/Car.js";
 import { avianInit } from "./examples/Avian.js";
 import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
+import { compoundInit } from "./examples/Compound.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -52,14 +53,14 @@ function render() {
 
     ctx.lineWidth = 3;
 
-    ctx.clearRect(0,0,500,500);
+    ctx.clearRect(0, 0, 500, 500);
 
     const bodies = physics.allBodies(world);
     for (const joint of world.joints) {
         ctx.strokeStyle = "yellow";
 
         const bodyA = bodies.find(b => b.id === joint.bodyA);
-        const bodyB= bodies.find(b => b.id === joint.bodyB);
+        const bodyB = bodies.find(b => b.id === joint.bodyB);
         ctx.beginPath();
         ctx.moveTo(bodyA.center.x, bodyA.center.y);
         ctx.lineTo(bodyB.center.x, bodyB.center.y);
@@ -72,28 +73,46 @@ function render() {
         } else if ((body as physics.DynamicRigidBody).restingTime > world.restTime) {
             ctx.strokeStyle = "green";
         }
-        if (body.type === physics.ShapeType.CIRCLE) {
-            ctx.save();
-            ctx.translate(body.center.x, body.center.y);
-            ctx.rotate(body.angle);
 
-            ctx.beginPath();
-            ctx.arc(0, 0, body.bounds, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, body.bounds);
-            ctx.stroke();
-            
-            ctx.restore();
-        } 
-        if (body.type === physics.ShapeType.RECTANGLE) {
-            ctx.save();
-            ctx.translate(body.center.x, body.center.y);
-            ctx.rotate(body.angle);
-            ctx.strokeRect(-body.width/2, -body.height/2, body.width, body.height);
-            ctx.restore();
+        for (const shape of body.shapes) {
+            if (shape.type === physics.ShapeType.CIRCLE) {
+                ctx.save();
+                ctx.translate(shape.center.x, shape.center.y);
+                ctx.rotate(body.angle);
+
+                ctx.beginPath();
+                ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, shape.bounds);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+            if (shape.type === physics.ShapeType.RECTANGLE) {
+                ctx.save();
+                ctx.translate(shape.center.x, shape.center.y);
+                ctx.rotate(body.angle);
+                ctx.strokeRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                ctx.restore();
+            }
         }
+
+
+        if (!body.static) {
+            const dynamic = body as physics.DynamicRigidBody;
+            ctx.fillStyle = "blue";
+            ctx.beginPath();
+            ctx.arc(dynamic.centerOfPhysics.x, dynamic.centerOfPhysics.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(body.center.x, body.center.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+
     }
 }
 
@@ -105,9 +124,10 @@ export function selectDemo() {
 
 export function restart() {
     world = currentDemo.init();
-} 
+}
 
 const DEMOS: Demo[] = [
+    { name: "Compound", init: compoundInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },

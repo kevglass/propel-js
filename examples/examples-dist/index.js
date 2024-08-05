@@ -6,6 +6,7 @@ import { jointsInit } from "./examples/Joints.js";
 import { carInit } from "./examples/Car.js";
 import { avianInit } from "./examples/Avian.js";
 import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
+import { compoundInit } from "./examples/Compound.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -50,26 +51,39 @@ function render() {
         else if (body.restingTime > world.restTime) {
             ctx.strokeStyle = "green";
         }
-        if (body.type === physics.ShapeType.CIRCLE) {
-            ctx.save();
-            ctx.translate(body.center.x, body.center.y);
-            ctx.rotate(body.angle);
-            ctx.beginPath();
-            ctx.arc(0, 0, body.bounds, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, body.bounds);
-            ctx.stroke();
-            ctx.restore();
+        for (const shape of body.shapes) {
+            if (shape.type === physics.ShapeType.CIRCLE) {
+                ctx.save();
+                ctx.translate(shape.center.x, shape.center.y);
+                ctx.rotate(body.angle);
+                ctx.beginPath();
+                ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, shape.bounds);
+                ctx.stroke();
+                ctx.restore();
+            }
+            if (shape.type === physics.ShapeType.RECTANGLE) {
+                ctx.save();
+                ctx.translate(shape.center.x, shape.center.y);
+                ctx.rotate(body.angle);
+                ctx.strokeRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                ctx.restore();
+            }
         }
-        if (body.type === physics.ShapeType.RECTANGLE) {
-            ctx.save();
-            ctx.translate(body.center.x, body.center.y);
-            ctx.rotate(body.angle);
-            ctx.strokeRect(-body.width / 2, -body.height / 2, body.width, body.height);
-            ctx.restore();
+        if (!body.static) {
+            const dynamic = body;
+            ctx.fillStyle = "blue";
+            ctx.beginPath();
+            ctx.arc(dynamic.centerOfPhysics.x, dynamic.centerOfPhysics.y, 2, 0, Math.PI * 2);
+            ctx.fill();
         }
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(body.center.x, body.center.y, 2, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 export function selectDemo() {
@@ -81,6 +95,7 @@ export function restart() {
     world = currentDemo.init();
 }
 const DEMOS = [
+    { name: "Compound", init: compoundInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
