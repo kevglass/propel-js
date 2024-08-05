@@ -21,6 +21,10 @@ export declare namespace physics {
         center: Vector2;
         /** The shape type of the body */
         type: ShapeType;
+        /** True if this a sensor not a real body shape */
+        sensor: boolean;
+        /** True if this sensor is currently triggered */
+        sensorColliding: boolean;
     };
     export type Circle = {
         type: ShapeType.CIRCLE;
@@ -207,7 +211,7 @@ export declare namespace physics {
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, data?: any): Body;
+    export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, sensor?: boolean, data?: any): Body;
     /**
      * Create a body with a rectangular shape
      *
@@ -220,7 +224,7 @@ export declare namespace physics {
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, data?: any): Body;
+    export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, sensor?: boolean, data?: any): Body;
     /**
      * Move a body
      *
@@ -324,8 +328,8 @@ export declare namespace physics {
      * @returns The newly created normalized vector
      */
     export function normalize(v: Vector2): Vector2;
-    export function createCircleShape(center: Vector2, radius: number): Circle;
-    export function createRectangleShape(center: Vector2, width: number, height: number): Rectangle;
+    export function createCircleShape(center: Vector2, radius: number, sensor?: boolean): Circle;
+    export function createRectangleShape(center: Vector2, width: number, height: number, sensor?: boolean): Rectangle;
     export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body;
     /**
      * Add a body to the world

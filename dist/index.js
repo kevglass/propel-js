@@ -156,8 +156,8 @@ export var physics;
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    function createCircle(world, center, radius, mass, friction, restitution, data) {
-        const circle = createCircleShape(center, radius);
+    function createCircle(world, center, radius, mass, friction, restitution, sensor = false, data) {
+        const circle = createCircleShape(center, radius, sensor);
         return createRigidBody(world, center, mass, friction, restitution, [circle], data);
     }
     physics.createCircle = createCircle;
@@ -174,8 +174,8 @@ export var physics;
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    function createRectangle(world, center, width, height, mass, friction, restitution, data) {
-        const rect = createRectangleShape(center, width, height);
+    function createRectangle(world, center, width, height, mass, friction, restitution, sensor = false, data) {
+        const rect = createRectangleShape(center, width, height, sensor);
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     }
     physics.createRectangle = createRectangle;
@@ -270,6 +270,15 @@ export var physics;
         const allEnabled = enabledBodies(world, dynamics);
         const all = allBodies(world, dynamics);
         const collisions = [];
+        // clear all the sensors
+        for (const body of all) {
+            body.shapes.forEach(s => {
+                if (!body.static && body.restingTime > world.restTime) {
+                    return;
+                }
+                s.sensorColliding = false;
+            });
+        }
         for (const body of dynamics) {
             if (!body.velocity && !body.acceleration) {
                 continue;
@@ -545,7 +554,15 @@ export var physics;
     };
     // Collision info setter
     function setCollisionInfo(collision, D, N, S, A, B) {
-        if (D < collision.depth) {
+        if (collision.depth >= D) {
+            return;
+        }
+        if (A.sensor) {
+            A.sensorColliding = true;
+            return;
+        }
+        if (B.sensor) {
+            B.sensorColliding = true;
             return;
         }
         collision.depth = D; // depth
@@ -567,7 +584,7 @@ export var physics;
         }
         return result;
     }
-    function createCircleShape(center, radius) {
+    function createCircleShape(center, radius, sensor = false) {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -577,10 +594,12 @@ export var physics;
             center,
             bounds: radius,
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
+            sensor,
+            sensorColliding: false
         };
     }
     physics.createCircleShape = createCircleShape;
-    function createRectangleShape(center, width, height) {
+    function createRectangleShape(center, width, height, sensor = false) {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -599,6 +618,8 @@ export var physics;
             width, height, center, vertices, faceNormals,
             bounds,
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
+            sensor,
+            sensorColliding: false
         };
     }
     physics.createRectangleShape = createRectangleShape;

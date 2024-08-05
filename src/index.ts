@@ -28,6 +28,10 @@ export namespace physics {
         center: Vector2,
         /** The shape type of the body */
         type: ShapeType,
+        /** True if this a sensor not a real body shape */
+        sensor: boolean;
+        /** True if this sensor is currently triggered */
+        sensorColliding: boolean;
     }
 
     export type Circle = {
@@ -331,8 +335,8 @@ export namespace physics {
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, data?: any): Body {
-        const circle = createCircleShape(center, radius);
+    export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, sensor: boolean = false, data?: any): Body {
+        const circle = createCircleShape(center, radius, sensor);
 
         return createRigidBody(world, center, mass, friction, restitution, [circle], data);
     };
@@ -349,8 +353,8 @@ export namespace physics {
      * @param restitution The friction to apply during collisions with the new body
      * @returns The newly created body
      */
-    export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, data?: any): Body {
-        const rect = createRectangleShape(center, width, height);
+    export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, sensor: boolean = false, data?: any): Body {
+        const rect = createRectangleShape(center, width, height, sensor);
 
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     };
@@ -449,6 +453,16 @@ export namespace physics {
         const allEnabled = enabledBodies(world, dynamics);
         const all = allBodies(world, dynamics);
         const collisions: Collision[] = [];
+
+        // clear all the sensors
+        for (const body of all) {
+            body.shapes.forEach(s => {
+                if (!body.static && body.restingTime > world.restTime) {
+                    return;
+                }
+                s.sensorColliding = false;
+            });
+        }
 
         for (const body of dynamics) {
             if (!body.velocity && !body.acceleration) {
@@ -739,7 +753,15 @@ export namespace physics {
 
     // Collision info setter
     function setCollisionInfo(collision: CollisionDetails, D: number, N: Vector2, S: Vector2, A: Shape, B: Shape) {
-        if (D < collision.depth) {
+        if (collision.depth >= D) {
+            return;
+        }
+        if (A.sensor) {
+            A.sensorColliding = true;
+            return;
+        }
+        if (B.sensor) {
+            B.sensorColliding = true;
             return;
         }
 
@@ -767,7 +789,7 @@ export namespace physics {
         return result;
     }
 
-    export function createCircleShape(center: Vector2, radius: number): Circle {
+    export function createCircleShape(center: Vector2, radius: number, sensor: boolean = false): Circle {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -778,10 +800,12 @@ export namespace physics {
             center,
             bounds: radius,
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
+            sensor,
+            sensorColliding: false
         }
     }
 
-    export function createRectangleShape(center: Vector2, width: number, height: number): Rectangle {
+    export function createRectangleShape(center: Vector2, width: number, height: number, sensor: boolean = false): Rectangle {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -802,6 +826,8 @@ export namespace physics {
             width, height, center, vertices, faceNormals,
             bounds,
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
+            sensor,
+            sensorColliding: false
         }
     }
 

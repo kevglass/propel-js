@@ -7,6 +7,7 @@ import { carInit } from "./examples/Car.js";
 import { avianInit } from "./examples/Avian.js";
 import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
 import { compoundInit } from "./examples/Compound.js";
+import { sensorInit } from "./examples/Sensor.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -43,15 +44,20 @@ function render() {
         ctx.lineTo(bodyB.center.x, bodyB.center.y);
         ctx.stroke();
     }
-    for (const body of bodies) {
-        ctx.strokeStyle = "white";
-        if (body.static) {
-            ctx.strokeStyle = "grey";
-        }
-        else if (body.restingTime > world.restTime) {
-            ctx.strokeStyle = "green";
-        }
+    for (const body of bodies.sort((a, b) => (a.static ? 0 : 1) - (b.static ? 0 : 1))) {
         for (const shape of body.shapes) {
+            ctx.strokeStyle = "white";
+            ctx.setLineDash([]);
+            if (body.static) {
+                ctx.strokeStyle = "grey";
+            }
+            else if (body.restingTime > world.restTime) {
+                ctx.strokeStyle = "green";
+            }
+            if (shape.sensor) {
+                ctx.strokeStyle = "yellow";
+                ctx.setLineDash([5, 3]);
+            }
             if (shape.type === physics.ShapeType.CIRCLE) {
                 ctx.save();
                 ctx.translate(shape.center.x, shape.center.y);
@@ -63,13 +69,27 @@ function render() {
                 ctx.moveTo(0, 0);
                 ctx.lineTo(0, shape.bounds);
                 ctx.stroke();
+                if (shape.sensor && shape.sensorColliding) {
+                    ctx.fillStyle = "yellow";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, shape.bounds);
+                    ctx.fill();
+                }
                 ctx.restore();
             }
             if (shape.type === physics.ShapeType.RECTANGLE) {
+                ctx.fillStyle = "yellow";
                 ctx.save();
                 ctx.translate(shape.center.x, shape.center.y);
                 ctx.rotate(body.angle);
                 ctx.strokeRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                if (shape.sensor && shape.sensorColliding) {
+                    ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                }
                 ctx.restore();
             }
         }
@@ -95,6 +115,7 @@ export function restart() {
     world = currentDemo.init();
 }
 const DEMOS = [
+    { name: "Sensor", init: sensorInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
