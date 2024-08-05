@@ -19,6 +19,8 @@ in serializable structures with functions/resolvers outside of the data.
 * Rectangles
 * Circles
 * Joints
+* Compound Bodies
+* Sensors
 
 More added as time permits.
 
