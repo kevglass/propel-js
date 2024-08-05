@@ -95,7 +95,6 @@ export function restart() {
     world = currentDemo.init();
 }
 const DEMOS = [
-    { name: "Compound", init: compoundInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -103,6 +102,7 @@ const DEMOS = [
     { name: "Car", init: carInit },
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
+    { name: "Compound", init: compoundInit },
 ];
 const demoList = document.getElementById("demo");
 for (const demo of DEMOS) {

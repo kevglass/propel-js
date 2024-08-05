@@ -127,7 +127,6 @@ export function restart() {
 }
 
 const DEMOS: Demo[] = [
-    { name: "Compound", init: compoundInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -135,6 +134,7 @@ const DEMOS: Demo[] = [
     { name: "Car", init: carInit },
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
+    { name: "Compound", init: compoundInit },
 ];
 
 const demoList = document.getElementById("demo");
