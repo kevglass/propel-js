@@ -41,6 +41,8 @@ export declare namespace physics {
         faceNormals: Vector2[];
         /** The vertices of the corners of the rectangle */
         vertices: Vector2[];
+        /** The angle of the rectangle */
+        angle: number;
     } & BaseShape;
     /**
      * Two dimension vector
@@ -331,7 +333,7 @@ export declare namespace physics {
      */
     export function normalize(v: Vector2): Vector2;
     export function createCircleShape(center: Vector2, radius: number, sensor?: boolean): Circle;
-    export function createRectangleShape(center: Vector2, width: number, height: number, sensor?: boolean): Rectangle;
+    export function createRectangleShape(center: Vector2, width: number, height: number, ang?: number, sensor?: boolean): Rectangle;
     export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body;
     /**
      * Add a body to the world

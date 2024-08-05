@@ -175,7 +175,7 @@ export var physics;
      * @returns The newly created body
      */
     function createRectangle(world, center, width, height, mass, friction, restitution, sensor = false, data) {
-        const rect = createRectangleShape(center, width, height, sensor);
+        const rect = createRectangleShape(center, width, height, 0, sensor);
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     }
     physics.createRectangle = createRectangle;
@@ -599,7 +599,7 @@ export var physics;
         };
     }
     physics.createCircleShape = createCircleShape;
-    function createRectangleShape(center, width, height, sensor = false) {
+    function createRectangleShape(center, width, height, ang = 0, sensor = false) {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -611,6 +611,11 @@ export var physics;
             newVec2(center.x + width / 2, center.y + height / 2),
             newVec2(center.x - width / 2, center.y + height / 2)
         ];
+        if (ang !== 0) {
+            for (let i = 0; i < 4; i++) {
+                vertices[i] = rotateVec2(vertices[i], center, ang);
+            }
+        }
         const faceNormals = computeRectNormals(vertices);
         const bounds = Math.hypot(width, height) / 2;
         return {
@@ -620,7 +625,8 @@ export var physics;
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
             sensorColliding: false,
-            inertia: 0
+            inertia: 0,
+            angle: ang
         };
     }
     physics.createRectangleShape = createRectangleShape;

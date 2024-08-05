@@ -50,6 +50,8 @@ export namespace physics {
         faceNormals: Vector2[]
         /** The vertices of the corners of the rectangle */
         vertices: Vector2[],
+        /** The angle of the rectangle */
+        angle: number,
     } & BaseShape;
 
     /**
@@ -356,7 +358,7 @@ export namespace physics {
      * @returns The newly created body
      */
     export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, sensor: boolean = false, data?: any): Body {
-        const rect = createRectangleShape(center, width, height, sensor);
+        const rect = createRectangleShape(center, width, height, 0, sensor);
 
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     };
@@ -804,7 +806,7 @@ export namespace physics {
         }
     }
 
-    export function createRectangleShape(center: Vector2, width: number, height: number, sensor: boolean = false): Rectangle {
+    export function createRectangleShape(center: Vector2, width: number, height: number, ang: number = 0, sensor: boolean = false): Rectangle {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -817,6 +819,12 @@ export namespace physics {
             newVec2(center.x + width / 2, center.y + height / 2),
             newVec2(center.x - width / 2, center.y + height / 2)
         ]
+        if (ang !== 0) {
+            for (let i=0;i<4;i++) {
+                vertices[i] = rotateVec2(vertices[i], center, ang);
+            }
+        }
+
         const faceNormals = computeRectNormals(vertices)
         const bounds = Math.hypot(width, height) / 2;
 
@@ -827,7 +835,8 @@ export namespace physics {
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
             sensorColliding: false,
-            inertia: 0
+            inertia: 0,
+            angle: ang
         }
     }
 

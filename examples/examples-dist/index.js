@@ -85,7 +85,7 @@ function render() {
                 ctx.fillStyle = "yellow";
                 ctx.save();
                 ctx.translate(shape.center.x, shape.center.y);
-                ctx.rotate(body.angle);
+                ctx.rotate(body.angle + shape.angle);
                 ctx.strokeRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
                 if (shape.sensor && shape.sensorColliding) {
                     ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
