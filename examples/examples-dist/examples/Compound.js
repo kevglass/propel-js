@@ -4,9 +4,11 @@ export function compoundInit() {
     const world = physics.createWorld();
     world.damp = 0.98;
     world.restTime = 0.25;
-    const restitution = 0.1;
+    const restitution = 0;
     const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, 0.5, restitution);
     physics.addBody(world, rect);
+    const rect2 = physics.createRectangle(world, { x: 230, y: 300 }, 20, 30, 0, 0.5, restitution);
+    physics.addBody(world, rect2);
     const shape1 = physics.createRectangleShape({ x: 255, y: 50 }, 40, 40);
     const shape2 = physics.createRectangleShape({ x: 225, y: 50 }, 20, 80);
     const shape3 = physics.createRectangleShape({ x: 275, y: 50 }, 20, 60);
