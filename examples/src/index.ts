@@ -157,7 +157,7 @@ const DEMOS: Demo[] = [
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
-    { name: "Compound (Alpha)", init: compoundInit },
+    { name: "Compound", init: compoundInit },
 ];
 
 const demoList = document.getElementById("demo");

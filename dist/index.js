@@ -370,17 +370,21 @@ export var physics;
                             if (!bodyI.static) {
                                 if (bodyI.shapes.includes(collisionInfo.shapeA)) {
                                     bodyI.centerOfPhysics = { ...collisionInfo.shapeA.center };
+                                    bodyI.inertia = collisionInfo.shapeA.inertia;
                                 }
                                 if (bodyI.shapes.includes(collisionInfo.shapeB)) {
                                     bodyI.centerOfPhysics = { ...collisionInfo.shapeB.center };
+                                    bodyI.inertia = collisionInfo.shapeB.inertia;
                                 }
                             }
                             if (!bodyJ.static) {
                                 if (bodyJ.shapes.includes(collisionInfo.shapeA)) {
                                     bodyJ.centerOfPhysics = { ...collisionInfo.shapeA.center };
+                                    bodyJ.inertia = collisionInfo.shapeA.inertia;
                                 }
                                 if (bodyJ.shapes.includes(collisionInfo.shapeB)) {
                                     bodyJ.centerOfPhysics = { ...collisionInfo.shapeB.center };
+                                    bodyJ.inertia = collisionInfo.shapeB.inertia;
                                 }
                             }
                             // Make sure the normal is always from object[i] to object[j]
@@ -574,15 +578,10 @@ export var physics;
         collision.shapeA = A;
         collision.shapeB = B;
     }
-    function calculateInertia(shapes, mass) {
-        let result = 0;
-        for (const shape of shapes) {
-            const total = shape.type === ShapeType.RECTANGLE // inertia
-                ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
-                : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;;
-            result += (total / shapes.length);
-        }
-        return result;
+    function calculateInertia(shape, mass) {
+        return shape.type === ShapeType.RECTANGLE // inertia
+            ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
+            : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;
     }
     function createCircleShape(center, radius, sensor = false) {
         // the original code only works well with whole number static objects
@@ -595,7 +594,8 @@ export var physics;
             bounds: radius,
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
             sensor,
-            sensorColliding: false
+            sensorColliding: false,
+            inertia: 0
         };
     }
     physics.createCircleShape = createCircleShape;
@@ -619,7 +619,8 @@ export var physics;
             bounds,
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
-            sensorColliding: false
+            sensorColliding: false,
+            inertia: 0
         };
     }
     physics.createRectangleShape = createRectangleShape;
@@ -636,6 +637,9 @@ export var physics;
             permeability: 0,
             data: data ?? null
         };
+        for (const shape of shapes) {
+            shape.inertia = calculateInertia(shape, mass);
+        }
         if (!mass) {
             return staticBody;
         }
@@ -651,7 +655,7 @@ export var physics;
                 averageAngle: 0,
                 angularVelocity: 0, // angle velocity
                 angularAcceleration: 0, // angle acceleration,
-                inertia: calculateInertia(shapes, mass),
+                inertia: calculateInertia(shapes[0], mass),
                 restingTime: 0,
                 fixedPosition: false,
                 fixedRotation: false

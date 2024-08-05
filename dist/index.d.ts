@@ -25,6 +25,8 @@ export declare namespace physics {
         sensor: boolean;
         /** True if this sensor is currently triggered */
         sensorColliding: boolean;
+        /** The inertia applied when this shape is colliding */
+        inertia: number;
     };
     export type Circle = {
         type: ShapeType.CIRCLE;

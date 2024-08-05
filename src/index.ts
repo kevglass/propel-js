@@ -32,6 +32,8 @@ export namespace physics {
         sensor: boolean;
         /** True if this sensor is currently triggered */
         sensorColliding: boolean;
+        /** The inertia applied when this shape is colliding */
+        inertia: number;
     }
 
     export type Circle = {
@@ -561,17 +563,21 @@ export namespace physics {
                             if (!bodyI.static) {
                                 if (bodyI.shapes.includes(collisionInfo.shapeA!)) {
                                     bodyI.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                    bodyI.inertia = collisionInfo.shapeA!.inertia;
                                 }
                                 if (bodyI.shapes.includes(collisionInfo.shapeB!)) {
                                     bodyI.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                    bodyI.inertia = collisionInfo.shapeB!.inertia;
                                 }
                             }
                             if (!bodyJ.static) {
                                 if (bodyJ.shapes.includes(collisionInfo.shapeA!)) {
                                     bodyJ.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                    bodyJ.inertia = collisionInfo.shapeA!.inertia;
                                 }
                                 if (bodyJ.shapes.includes(collisionInfo.shapeB!)) {
                                     bodyJ.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                    bodyJ.inertia = collisionInfo.shapeB!.inertia;
                                 }
                             }
 
@@ -775,18 +781,10 @@ export namespace physics {
         collision.shapeB = B;
     }
 
-    function calculateInertia(shapes: Shape[], mass: number): number {
-        let result = 0;
-
-        for (const shape of shapes) {
-            const total = shape.type === ShapeType.RECTANGLE // inertia
-                ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
-                : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;;
-
-            result += (total / shapes.length);
-        }
-
-        return result;
+    function calculateInertia(shape: Shape, mass: number): number {
+        return shape.type === ShapeType.RECTANGLE // inertia
+            ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
+            : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;
     }
 
     export function createCircleShape(center: Vector2, radius: number, sensor: boolean = false): Circle {
@@ -801,7 +799,8 @@ export namespace physics {
             bounds: radius,
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
             sensor,
-            sensorColliding: false
+            sensorColliding: false,
+            inertia: 0
         }
     }
 
@@ -827,7 +826,8 @@ export namespace physics {
             bounds,
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
-            sensorColliding: false
+            sensorColliding: false,
+            inertia: 0
         }
     }
 
@@ -845,6 +845,10 @@ export namespace physics {
             data: data ?? null
         }
 
+        for (const shape of shapes) {
+            shape.inertia = calculateInertia(shape, mass);
+        }
+
         if (!mass) {
             return staticBody
         } else {
@@ -859,7 +863,7 @@ export namespace physics {
                 averageAngle: 0,
                 angularVelocity: 0, // angle velocity
                 angularAcceleration: 0, // angle acceleration,
-                inertia: calculateInertia(shapes, mass),
+                inertia: calculateInertia(shapes[0], mass),
                 restingTime: 0,
                 fixedPosition: false,
                 fixedRotation: false
