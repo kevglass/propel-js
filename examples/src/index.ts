@@ -8,6 +8,7 @@ import { avianInit } from "./examples/Avian.js";
 import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
 import { compoundInit } from "./examples/Compound.js";
 import { sensorInit } from "./examples/Sensor.js";
+import { polyboxInit } from "./examples/Polybox.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -158,6 +159,7 @@ const DEMOS: Demo[] = [
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
     { name: "Compound", init: compoundInit },
+    { name: "Polybox", init: polyboxInit },
 ];
 
 const demoList = document.getElementById("demo");
