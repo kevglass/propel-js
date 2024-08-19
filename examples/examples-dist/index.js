@@ -117,7 +117,6 @@ export function restart() {
     world = currentDemo.init();
 }
 const DEMOS = [
-    { name: "Exclusions", init: exclusionsInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -128,6 +127,7 @@ const DEMOS = [
     { name: "Sensor", init: sensorInit },
     { name: "Compound", init: compoundInit },
     { name: "Polybox", init: polyboxInit },
+    { name: "Exclusions", init: exclusionsInit },
 ];
 const demoList = document.getElementById("demo");
 for (const demo of DEMOS) {

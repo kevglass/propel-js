@@ -151,7 +151,6 @@ export function restart() {
 }
 
 const DEMOS: Demo[] = [
-    { name: "Exclusions", init: exclusionsInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -162,6 +161,7 @@ const DEMOS: Demo[] = [
     { name: "Sensor", init: sensorInit },
     { name: "Compound", init: compoundInit },
     { name: "Polybox", init: polyboxInit },
+    { name: "Exclusions", init: exclusionsInit },
 ];
 
 const demoList = document.getElementById("demo");
