@@ -9,6 +9,7 @@ import { platformerInit, platformerInput, platformerUpdate } from "./examples/Pl
 import { compoundInit } from "./examples/Compound.js";
 import { sensorInit } from "./examples/Sensor.js";
 import { polyboxInit } from "./examples/Polybox.js";
+import { exclusionsInit } from "./examples/Exclusions.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -150,6 +151,7 @@ export function restart() {
 }
 
 const DEMOS: Demo[] = [
+    { name: "Exclusions", init: exclusionsInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },

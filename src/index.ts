@@ -196,6 +196,8 @@ export namespace physics {
         jointRestriction: number;
         /** The time it takes for a non-moving dynamic body to go into resting state */
         restTime: number;
+        /** Any collision exclusions between bodies */
+        exclusions: Record<number, number[]>
     }
 
     /**
@@ -305,9 +307,46 @@ export namespace physics {
             joints: [],
             frameCount: 0,
             jointRestriction: 1,
-            restTime
+            restTime,
+            exclusions: {}
         }
     };
+
+    /**
+     * Exclude collisions between the two bodies specified. They'll no longer collide or
+     * have collision response
+     * 
+     * @param world The world in which we want the exclusion to take place
+     * @param bodyA First body to exclude from colliding with bodyB
+     * @param bodyB Second body to exclude from colliding with bodyA
+     */
+    export function excludeCollisions(world: World, bodyA: Body, bodyB: Body): void {
+        world.exclusions[bodyA.id] = world.exclusions[bodyA.id] ?? []
+        if (!world.exclusions[bodyA.id].includes(bodyB.id)) {
+            world.exclusions[bodyA.id].push(bodyB.id);
+        }
+        world.exclusions[bodyB.id] = world.exclusions[bodyB.id] ?? []
+        if (!world.exclusions[bodyB.id].includes(bodyA.id)) {
+            world.exclusions[bodyB.id].push(bodyA.id);
+        }
+    }
+
+    /**
+     * Include collisions between the two bodies specified. They'll collide and
+     * have collision response. This undoes any exclusion 
+     * 
+     * @param world The world in which we want the exclusion to take place
+     * @param bodyA First body to exclude from colliding with bodyB
+     * @param bodyB Second body to exclude from colliding with bodyA
+     */
+    export function includeCollisions(world: World, bodyA: Body, bodyB: Body): void {
+        if (world.exclusions[bodyA.id]) {
+            world.exclusions[bodyA.id] = world.exclusions[bodyA.id].filter(id => bodyB.id === id)
+        }
+        if (world.exclusions[bodyB.id]) {
+            world.exclusions[bodyB.id] = world.exclusions[bodyA.id].filter(id => bodyA.id === id)
+        }
+    }
 
     /**
      * Create a joint between two bodies in the world
@@ -550,6 +589,13 @@ export namespace physics {
                     // Test bounds
                     const bodyJ = allEnabled[j];
 
+                    if (world.exclusions[bodyJ.id]?.includes(bodyI.id)) {
+                        continue;
+                    }
+                    if (world.exclusions[bodyI.id]?.includes(bodyJ.id)) {
+                        continue;
+                    }
+                    
                     // resting and static bodies don't need to collide
                     if (boundTest(bodyI, bodyJ)) {
                         // Test collision

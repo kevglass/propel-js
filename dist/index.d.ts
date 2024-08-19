@@ -158,6 +158,8 @@ export declare namespace physics {
         jointRestriction: number;
         /** The time it takes for a non-moving dynamic body to go into resting state */
         restTime: number;
+        /** Any collision exclusions between bodies */
+        exclusions: Record<number, number[]>;
     }
     /**
      * Get a list of all bodies in the system
@@ -194,6 +196,24 @@ export declare namespace physics {
      * @returns The newly created world
      */
     export function createWorld(gravity?: Vector2, restTime?: number): World;
+    /**
+     * Exclude collisions between the two bodies specified. They'll no longer collide or
+     * have collision response
+     *
+     * @param world The world in which we want the exclusion to take place
+     * @param bodyA First body to exclude from colliding with bodyB
+     * @param bodyB Second body to exclude from colliding with bodyA
+     */
+    export function excludeCollisions(world: World, bodyA: Body, bodyB: Body): void;
+    /**
+     * Include collisions between the two bodies specified. They'll collide and
+     * have collision response. This undoes any exclusion
+     *
+     * @param world The world in which we want the exclusion to take place
+     * @param bodyA First body to exclude from colliding with bodyB
+     * @param bodyB Second body to exclude from colliding with bodyA
+     */
+    export function includeCollisions(world: World, bodyA: Body, bodyB: Body): void;
     /**
      * Create a joint between two bodies in the world
      *
