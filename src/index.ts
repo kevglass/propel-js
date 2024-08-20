@@ -78,6 +78,8 @@ export namespace physics {
         rigidity: number;
         /** Factor of how much the joint will stretch */
         elasticity: number;
+        /** True if the joint is soft, i.e. it doesn't force movement but only applies velocities */
+        soft: boolean;
     }
 
     /**
@@ -357,13 +359,14 @@ export namespace physics {
      * @param rigidity The amount the joint will compress 
      * @param elasticity The amount the joint will stretch
      */
-    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity: number = 1, elasticity: number = 0): void {
+    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity: number = 1, elasticity: number = 0, soft = false): void {
         world.joints.push({
             bodyA: bodyA.id,
             bodyB: bodyB.id,
             distance: lengthVec2(subtractVec2(bodyA.center, bodyB.center)) + 0.5, // add a bit of space to prevent constant collision
             rigidity,
-            elasticity
+            elasticity,
+            soft
         });
     };
 
@@ -547,7 +550,9 @@ export namespace physics {
                         } else {
                             vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
                         }
-                        _moveBody(body, vec);
+                        if (!joint.soft) {
+                            _moveBody(body, vec);
+                        }
                         body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
                     }
 
@@ -595,7 +600,7 @@ export namespace physics {
                     if (world.exclusions[bodyI.id]?.includes(bodyJ.id)) {
                         continue;
                     }
-                    
+
                     // resting and static bodies don't need to collide
                     if (boundTest(bodyI, bodyJ)) {
                         // Test collision

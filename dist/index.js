@@ -171,13 +171,14 @@ export var physics;
      * @param rigidity The amount the joint will compress
      * @param elasticity The amount the joint will stretch
      */
-    function createJoint(world, bodyA, bodyB, rigidity = 1, elasticity = 0) {
+    function createJoint(world, bodyA, bodyB, rigidity = 1, elasticity = 0, soft = false) {
         world.joints.push({
             bodyA: bodyA.id,
             bodyB: bodyB.id,
             distance: lengthVec2(subtractVec2(bodyA.center, bodyB.center)) + 0.5, // add a bit of space to prevent constant collision
             rigidity,
-            elasticity
+            elasticity,
+            soft
         });
     }
     physics.createJoint = createJoint;
@@ -358,7 +359,9 @@ export var physics;
                         else {
                             vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
                         }
-                        _moveBody(body, vec);
+                        if (!joint.soft) {
+                            _moveBody(body, vec);
+                        }
                         body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
                     }
                     // if they're held together with no free move then

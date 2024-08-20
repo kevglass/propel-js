@@ -10,6 +10,7 @@ import { compoundInit } from "./examples/Compound.js";
 import { sensorInit } from "./examples/Sensor.js";
 import { polyboxInit } from "./examples/Polybox.js";
 import { exclusionsInit } from "./examples/Exclusions.js";
+import { gooInit } from "./examples/Goo.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -128,6 +129,7 @@ const DEMOS = [
     { name: "Compound", init: compoundInit },
     { name: "Polybox", init: polyboxInit },
     { name: "Exclusions", init: exclusionsInit },
+    { name: "Goo", init: gooInit },
 ];
 const demoList = document.getElementById("demo");
 for (const demo of DEMOS) {

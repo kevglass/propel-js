@@ -67,6 +67,8 @@ export declare namespace physics {
         rigidity: number;
         /** Factor of how much the joint will stretch */
         elasticity: number;
+        /** True if the joint is soft, i.e. it doesn't force movement but only applies velocities */
+        soft: boolean;
     }
     /**
      * Description of a collision that occurred for the client app
@@ -223,7 +225,7 @@ export declare namespace physics {
      * @param rigidity The amount the joint will compress
      * @param elasticity The amount the joint will stretch
      */
-    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity?: number, elasticity?: number): void;
+    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity?: number, elasticity?: number, soft?: boolean): void;
     /**
      * Create a body with a circular shape
      *
