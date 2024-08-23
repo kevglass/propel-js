@@ -157,7 +157,6 @@ export function restart() {
 }
 
 const DEMOS: Demo[] = [
-    { name: "No Gravity", init: noGravityInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -172,6 +171,7 @@ const DEMOS: Demo[] = [
     { name: "Goo", init: gooInit },
     { name: "Compound Joint", init: compoundJointInit },
     { name: "Car 2", init: car2Init },
+    { name: "No Gravity", init: noGravityInit },
 ];
 
 const demoList = document.getElementById("demo");
