@@ -20,6 +20,8 @@ export namespace physics {
     export type Shape = Rectangle | Circle;
 
     export type BaseShape = {
+        /** The id given to this shape */
+        id: number,
         /** The radius of a bounding circle around the body */
         bounds: number,
         /** The boding box around the body - used for efficient bounds tests */
@@ -34,6 +36,8 @@ export namespace physics {
         sensorColliding: boolean;
         /** The inertia applied when this shape is colliding */
         inertia: number;
+        /** The ID of the body this shape is part of */
+        bodyId?: number;
     }
 
     export type Circle = {
@@ -80,6 +84,10 @@ export namespace physics {
         elasticity: number;
         /** True if the joint is soft, i.e. it doesn't force movement but only applies velocities */
         soft: boolean;
+        /** The ID of the shape body A is connected by */
+        shapeA?: number;
+        /** The ID of the shape body B is connected by */
+        shapeB?: number;
     }
 
     /**
@@ -130,6 +138,8 @@ export namespace physics {
         angle: number,
         /** True if this body is static - i.e. it doesn't moved or rotate */
         static: boolean;
+        /** Discriminator */
+        type: "BODY"
     }
 
     export interface StaticRigidBody extends BodyCore {
@@ -199,7 +209,9 @@ export namespace physics {
         /** The time it takes for a non-moving dynamic body to go into resting state */
         restTime: number;
         /** Any collision exclusions between bodies */
-        exclusions: Record<number, number[]>
+        exclusions: Record<number, number[]>;
+        /** True if the world is paused */
+        paused: boolean;
     }
 
     /**
@@ -310,7 +322,8 @@ export namespace physics {
             frameCount: 0,
             jointRestriction: 1,
             restTime,
-            exclusions: {}
+            exclusions: {},
+            paused: false
         }
     };
 
@@ -359,15 +372,34 @@ export namespace physics {
      * @param rigidity The amount the joint will compress 
      * @param elasticity The amount the joint will stretch
      */
-    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity: number = 1, elasticity: number = 0, soft = false): void {
-        world.joints.push({
-            bodyA: bodyA.id,
-            bodyB: bodyB.id,
-            distance: lengthVec2(subtractVec2(bodyA.center, bodyB.center)) + 0.5, // add a bit of space to prevent constant collision
+    export function createJoint(world: World, bodyA: Body | Shape, bodyB: Body | Shape, rigidity: number = 1, elasticity: number = 0, soft = false): void {
+
+        const joint = {
+            bodyA: bodyA.type === "BODY" ? bodyA.id : bodyA.bodyId!,
+            bodyB: bodyB.type === "BODY" ? bodyB.id : bodyB.bodyId!,
+            distance: 0,
             rigidity,
             elasticity,
-            soft
-        });
+            soft,
+            shapeA: bodyA.type !== "BODY" ? bodyA.id : 0,
+            shapeB: bodyB.type !== "BODY" ? bodyB.id : 0,
+        };
+
+
+        const a = allBodies(world).find(b => b.id === joint.bodyA);
+        const b = allBodies(world).find(b => b.id === joint.bodyB);
+
+        if (!a) {
+            throw "Body A is not part of world. Joints must be connected to elements in the world"
+        }
+        if (!b) {
+            throw "Body A is not part of world. Joints must be connected to elements in the world"
+        }
+        const centerA = joint.shapeA ? a.shapes.find(s => s.id === joint.shapeA)!.center : a.center
+        const centerB = joint.shapeB ? b.shapes.find(s => s.id === joint.shapeB)!.center : b.center
+
+        joint.distance = lengthVec2(subtractVec2(centerA, centerB));
+        world.joints.push(joint)
     };
 
     /**
@@ -382,7 +414,7 @@ export namespace physics {
      * @returns The newly created body
      */
     export function createCircle(world: World, center: Vector2, radius: number, mass: number, friction: number, restitution: number, sensor: boolean = false, data?: any): Body {
-        const circle = createCircleShape(center, radius, sensor);
+        const circle = createCircleShape(world, center, radius, sensor);
 
         return createRigidBody(world, center, mass, friction, restitution, [circle], data);
     };
@@ -400,7 +432,7 @@ export namespace physics {
      * @returns The newly created body
      */
     export function createRectangle(world: World, center: Vector2, width: number, height: number, mass: number, friction: number, restitution: number, sensor: boolean = false, data?: any): Body {
-        const rect = createRectangleShape(center, width, height, 0, sensor);
+        const rect = createRectangleShape(world, center, width, height, 0, sensor);
 
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     };
@@ -449,7 +481,7 @@ export namespace physics {
     export function setRotation(body: Body, angle: number): void {
         const diff = angle - body.angle;
         if (!body.static) {
-            body.centerOfPhysics = {...body.center}
+            body.centerOfPhysics = { ...body.center }
         }
         rotateBody(body, diff);
     };
@@ -494,6 +526,10 @@ export namespace physics {
      * @param world The world to step 
      */
     export function worldStep(fps: number, world: World, dynamics?: DynamicRigidBody[]): Collision[] {
+        if (world.paused) {
+            return []
+        }
+
         dynamics = dynamics ?? world.dynamicBodies;
 
         const allEnabled = enabledBodies(world, dynamics);
@@ -541,7 +577,12 @@ export namespace physics {
                 const otherId = joint.bodyA === body.id ? joint.bodyB : joint.bodyA;
                 const other = all.find(b => b.id === otherId);
                 if (other) {
-                    let vec = subtractVec2(other.center, body.center)
+                    const shapeId = joint.bodyA === body.id ? joint.shapeA : joint.shapeB;
+                    const otherShapeId = joint.bodyA === body.id ? joint.shapeB : joint.shapeA
+                    const center = shapeId ? body.shapes.find(s => s.id === shapeId)!.center : body.center;
+                    const otherCenter = otherShapeId ? other.shapes.find(s => s.id === otherShapeId)!.center : other.center;
+
+                    let vec = subtractVec2(otherCenter, center)
                     const distance = lengthVec2(vec);
                     const diff = distance - joint.distance;
                     if (diff != 0) {
@@ -554,6 +595,19 @@ export namespace physics {
                             _moveBody(body, vec);
                         }
                         body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
+
+                        const por = subtractVec2(body.center, center);
+                        if (lengthVec2(por) > 0) {
+                            let ang = Math.atan2(por.y, por.x) - Math.atan2(-vec.y, -vec.x);
+                            if (ang > Math.PI) {
+                                ang = Math.PI - ang;
+                            }
+                            if (ang < -Math.PI) {
+                                ang = (Math.PI * 2) + ang
+                            }
+                            body.angularVelocity -= ang / fps * (other.static ? 1 : 0.5)
+                        }
+
                     }
 
                     // if they're held together with no free move then
@@ -606,6 +660,16 @@ export namespace physics {
                         // Test collision
                         let collisionInfo = EmptyCollision();
                         if (testCollision(world, bodyI, bodyJ, collisionInfo)) {
+
+                            if (collisionInfo.shapeA && collisionInfo.shapeA.sensor) {
+                                collisionInfo.shapeA.sensorColliding = true;
+                                continue;
+                            }
+                            if (collisionInfo.shapeB && collisionInfo.shapeB.sensor) {
+                                collisionInfo.shapeB.sensorColliding = true;
+                                continue;
+                            }
+
                             if (bodyJ.permeability > 0) {
                                 bodyI.velocity.x *= 1 - bodyJ.permeability;
                                 bodyI.velocity.y *= 1 - bodyJ.permeability;
@@ -615,21 +679,21 @@ export namespace physics {
 
                             if (!bodyI.static) {
                                 if (bodyI.shapes.includes(collisionInfo.shapeA!)) {
-                                    bodyI.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                    bodyI.centerOfPhysics = { ...collisionInfo.shapeA!.center }
                                     bodyI.inertia = collisionInfo.shapeA!.inertia;
                                 }
                                 if (bodyI.shapes.includes(collisionInfo.shapeB!)) {
-                                    bodyI.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                    bodyI.centerOfPhysics = { ...collisionInfo.shapeB!.center }
                                     bodyI.inertia = collisionInfo.shapeB!.inertia;
                                 }
                             }
                             if (!bodyJ.static) {
                                 if (bodyJ.shapes.includes(collisionInfo.shapeA!)) {
-                                    bodyJ.centerOfPhysics = {...collisionInfo.shapeA!.center}
+                                    bodyJ.centerOfPhysics = { ...collisionInfo.shapeA!.center }
                                     bodyJ.inertia = collisionInfo.shapeA!.inertia;
                                 }
                                 if (bodyJ.shapes.includes(collisionInfo.shapeB!)) {
-                                    bodyJ.centerOfPhysics = {...collisionInfo.shapeB!.center}
+                                    bodyJ.centerOfPhysics = { ...collisionInfo.shapeB!.center }
                                     bodyJ.inertia = collisionInfo.shapeB!.inertia;
                                 }
                             }
@@ -815,14 +879,6 @@ export namespace physics {
         if (collision.depth >= D) {
             return;
         }
-        if (A.sensor) {
-            A.sensorColliding = true;
-            return;
-        }
-        if (B.sensor) {
-            B.sensorColliding = true;
-            return;
-        }
 
         collision.depth = D; // depth
         collision.normal.x = N.x; // normal
@@ -840,13 +896,14 @@ export namespace physics {
             : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;
     }
 
-    export function createCircleShape(center: Vector2, radius: number, sensor: boolean = false): Circle {
+    export function createCircleShape(world: World, center: Vector2, radius: number, sensor: boolean = false): Circle {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
         radius = Math.floor(radius);
 
         return {
+            id: world.nextId++,
             type: ShapeType.CIRCLE,
             center,
             bounds: radius,
@@ -857,7 +914,7 @@ export namespace physics {
         }
     }
 
-    export function createRectangleShape(center: Vector2, width: number, height: number, ang: number = 0, sensor: boolean = false): Rectangle {
+    export function createRectangleShape(world: World, center: Vector2, width: number, height: number, ang: number = 0, sensor: boolean = false): Rectangle {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -871,7 +928,7 @@ export namespace physics {
             newVec2(center.x - width / 2, center.y + height / 2)
         ]
         if (ang !== 0) {
-            for (let i=0;i<4;i++) {
+            for (let i = 0; i < 4; i++) {
                 vertices[i] = rotateVec2(vertices[i], center, ang);
             }
         }
@@ -880,6 +937,7 @@ export namespace physics {
         const bounds = Math.hypot(width, height) / 2;
 
         return {
+            id: world.nextId++,
             type: ShapeType.RECTANGLE,
             width, height, center, vertices, faceNormals,
             bounds,
@@ -902,11 +960,13 @@ export namespace physics {
             static: true,
             angle: 0,
             permeability: 0,
-            data: data ?? null
+            data: data ?? null,
+            type: "BODY"
         }
 
         for (const shape of shapes) {
             shape.inertia = calculateInertia(shape, mass);
+            shape.bodyId = staticBody.id
         }
 
         if (!mass) {
@@ -916,7 +976,7 @@ export namespace physics {
                 ...staticBody,
                 static: false,
                 averageCenter: newVec2(center.x, center.y),
-                centerOfPhysics: {...center},
+                centerOfPhysics: { ...center },
                 mass: 1 / mass, // inverseMass
                 velocity: newVec2(0, 0), // velocity (speed)
                 acceleration: world.gravity, // acceleration

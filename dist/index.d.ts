@@ -13,6 +13,8 @@ export declare namespace physics {
     }
     export type Shape = Rectangle | Circle;
     export type BaseShape = {
+        /** The id given to this shape */
+        id: number;
         /** The radius of a bounding circle around the body */
         bounds: number;
         /** The boding box around the body - used for efficient bounds tests */
@@ -27,6 +29,8 @@ export declare namespace physics {
         sensorColliding: boolean;
         /** The inertia applied when this shape is colliding */
         inertia: number;
+        /** The ID of the body this shape is part of */
+        bodyId?: number;
     };
     export type Circle = {
         type: ShapeType.CIRCLE;
@@ -69,6 +73,10 @@ export declare namespace physics {
         elasticity: number;
         /** True if the joint is soft, i.e. it doesn't force movement but only applies velocities */
         soft: boolean;
+        /** The ID of the shape body A is connected by */
+        shapeA?: number;
+        /** The ID of the shape body B is connected by */
+        shapeB?: number;
     }
     /**
      * Description of a collision that occurred for the client app
@@ -99,6 +107,8 @@ export declare namespace physics {
         angle: number;
         /** True if this body is static - i.e. it doesn't moved or rotate */
         static: boolean;
+        /** Discriminator */
+        type: "BODY";
     }
     export interface StaticRigidBody extends BodyCore {
         static: true;
@@ -162,6 +172,8 @@ export declare namespace physics {
         restTime: number;
         /** Any collision exclusions between bodies */
         exclusions: Record<number, number[]>;
+        /** True if the world is paused */
+        paused: boolean;
     }
     /**
      * Get a list of all bodies in the system
@@ -225,7 +237,7 @@ export declare namespace physics {
      * @param rigidity The amount the joint will compress
      * @param elasticity The amount the joint will stretch
      */
-    export function createJoint(world: World, bodyA: Body, bodyB: Body, rigidity?: number, elasticity?: number, soft?: boolean): void;
+    export function createJoint(world: World, bodyA: Body | Shape, bodyB: Body | Shape, rigidity?: number, elasticity?: number, soft?: boolean): void;
     /**
      * Create a body with a circular shape
      *
@@ -354,8 +366,8 @@ export declare namespace physics {
      * @returns The newly created normalized vector
      */
     export function normalize(v: Vector2): Vector2;
-    export function createCircleShape(center: Vector2, radius: number, sensor?: boolean): Circle;
-    export function createRectangleShape(center: Vector2, width: number, height: number, ang?: number, sensor?: boolean): Rectangle;
+    export function createCircleShape(world: World, center: Vector2, radius: number, sensor?: boolean): Circle;
+    export function createRectangleShape(world: World, center: Vector2, width: number, height: number, ang?: number, sensor?: boolean): Rectangle;
     export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body;
     /**
      * Add a body to the world

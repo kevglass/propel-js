@@ -1,11 +1,11 @@
 import { physics } from "../../../dist/index.js";
-export function createNShapes(center, size, sides, edgeDepth = 10) {
+export function createNShapes(world, center, size, sides, edgeDepth = 10) {
     const edgeLength = 2 * size * Math.sin(Math.PI / sides);
     const dis = (size * Math.cos(Math.PI / sides)) - (edgeDepth / 2);
     const shapes = [];
     for (let i = 0; i < sides; i++) {
         const ang = (Math.PI * 2 / sides) * i;
-        const shape = physics.createRectangleShape({ x: center.x + (Math.cos(ang) * dis), y: center.y + (Math.sin(ang) * dis) }, edgeDepth, edgeLength, ang);
+        const shape = physics.createRectangleShape(world, { x: center.x + (Math.cos(ang) * dis), y: center.y + (Math.sin(ang) * dis) }, edgeDepth, edgeLength, ang);
         shapes.push(shape);
     }
     return shapes;
@@ -19,11 +19,11 @@ export function polyboxInit() {
     const friction = 0.5;
     const rect = physics.createRectangle(world, { x: 250, y: 450 }, 400, 30, 0, friction, restitution);
     physics.addBody(world, rect);
-    const body = physics.createRigidBody(world, { x: 255, y: 50 }, 1, friction, restitution, createNShapes({ x: 255, y: 50 }, 40, 5, 10));
+    const body = physics.createRigidBody(world, { x: 255, y: 50 }, 1, friction, restitution, createNShapes(world, { x: 255, y: 50 }, 40, 5, 10));
     physics.addBody(world, body);
-    const body2 = physics.createRigidBody(world, { x: 135, y: 50 }, 1, friction, restitution, createNShapes({ x: 135, y: 50 }, 30, 3, 1));
+    const body2 = physics.createRigidBody(world, { x: 135, y: 50 }, 1, friction, restitution, createNShapes(world, { x: 135, y: 50 }, 30, 3, 1));
     physics.addBody(world, body2);
-    const body3 = physics.createRigidBody(world, { x: 205, y: 0 }, 1, friction, restitution, createNShapes({ x: 205, y: 0 }, 30, 6, 3));
+    const body3 = physics.createRigidBody(world, { x: 205, y: 0 }, 1, friction, restitution, createNShapes(world, { x: 205, y: 0 }, 30, 6, 3));
     physics.addBody(world, body3);
     return world;
 }

@@ -121,7 +121,8 @@ export var physics;
             frameCount: 0,
             jointRestriction: 1,
             restTime,
-            exclusions: {}
+            exclusions: {},
+            paused: false
         };
     }
     physics.createWorld = createWorld;
@@ -172,14 +173,28 @@ export var physics;
      * @param elasticity The amount the joint will stretch
      */
     function createJoint(world, bodyA, bodyB, rigidity = 1, elasticity = 0, soft = false) {
-        world.joints.push({
-            bodyA: bodyA.id,
-            bodyB: bodyB.id,
-            distance: lengthVec2(subtractVec2(bodyA.center, bodyB.center)) + 0.5, // add a bit of space to prevent constant collision
+        const joint = {
+            bodyA: bodyA.type === "BODY" ? bodyA.id : bodyA.bodyId,
+            bodyB: bodyB.type === "BODY" ? bodyB.id : bodyB.bodyId,
+            distance: 0,
             rigidity,
             elasticity,
-            soft
-        });
+            soft,
+            shapeA: bodyA.type !== "BODY" ? bodyA.id : 0,
+            shapeB: bodyB.type !== "BODY" ? bodyB.id : 0,
+        };
+        const a = allBodies(world).find(b => b.id === joint.bodyA);
+        const b = allBodies(world).find(b => b.id === joint.bodyB);
+        if (!a) {
+            throw "Body A is not part of world. Joints must be connected to elements in the world";
+        }
+        if (!b) {
+            throw "Body A is not part of world. Joints must be connected to elements in the world";
+        }
+        const centerA = joint.shapeA ? a.shapes.find(s => s.id === joint.shapeA).center : a.center;
+        const centerB = joint.shapeB ? b.shapes.find(s => s.id === joint.shapeB).center : b.center;
+        joint.distance = lengthVec2(subtractVec2(centerA, centerB));
+        world.joints.push(joint);
     }
     physics.createJoint = createJoint;
     ;
@@ -195,7 +210,7 @@ export var physics;
      * @returns The newly created body
      */
     function createCircle(world, center, radius, mass, friction, restitution, sensor = false, data) {
-        const circle = createCircleShape(center, radius, sensor);
+        const circle = createCircleShape(world, center, radius, sensor);
         return createRigidBody(world, center, mass, friction, restitution, [circle], data);
     }
     physics.createCircle = createCircle;
@@ -213,7 +228,7 @@ export var physics;
      * @returns The newly created body
      */
     function createRectangle(world, center, width, height, mass, friction, restitution, sensor = false, data) {
-        const rect = createRectangleShape(center, width, height, 0, sensor);
+        const rect = createRectangleShape(world, center, width, height, 0, sensor);
         return createRigidBody(world, center, mass, friction, restitution, [rect], data);
     }
     physics.createRectangle = createRectangle;
@@ -304,6 +319,9 @@ export var physics;
      * @param world The world to step
      */
     function worldStep(fps, world, dynamics) {
+        if (world.paused) {
+            return [];
+        }
         dynamics = dynamics ?? world.dynamicBodies;
         const allEnabled = enabledBodies(world, dynamics);
         const all = allBodies(world, dynamics);
@@ -349,7 +367,11 @@ export var physics;
                 const otherId = joint.bodyA === body.id ? joint.bodyB : joint.bodyA;
                 const other = all.find(b => b.id === otherId);
                 if (other) {
-                    let vec = subtractVec2(other.center, body.center);
+                    const shapeId = joint.bodyA === body.id ? joint.shapeA : joint.shapeB;
+                    const otherShapeId = joint.bodyA === body.id ? joint.shapeB : joint.shapeA;
+                    const center = shapeId ? body.shapes.find(s => s.id === shapeId).center : body.center;
+                    const otherCenter = otherShapeId ? other.shapes.find(s => s.id === otherShapeId).center : other.center;
+                    let vec = subtractVec2(otherCenter, center);
                     const distance = lengthVec2(vec);
                     const diff = distance - joint.distance;
                     if (diff != 0) {
@@ -363,6 +385,17 @@ export var physics;
                             _moveBody(body, vec);
                         }
                         body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
+                        const por = subtractVec2(body.center, center);
+                        if (lengthVec2(por) > 0) {
+                            let ang = Math.atan2(por.y, por.x) - Math.atan2(-vec.y, -vec.x);
+                            if (ang > Math.PI) {
+                                ang = Math.PI - ang;
+                            }
+                            if (ang < -Math.PI) {
+                                ang = (Math.PI * 2) + ang;
+                            }
+                            body.angularVelocity -= ang / fps * (other.static ? 1 : 0.5);
+                        }
                     }
                     // if they're held together with no free move then
                     // apply the dampening
@@ -407,6 +440,14 @@ export var physics;
                         // Test collision
                         let collisionInfo = EmptyCollision();
                         if (testCollision(world, bodyI, bodyJ, collisionInfo)) {
+                            if (collisionInfo.shapeA && collisionInfo.shapeA.sensor) {
+                                collisionInfo.shapeA.sensorColliding = true;
+                                continue;
+                            }
+                            if (collisionInfo.shapeB && collisionInfo.shapeB.sensor) {
+                                collisionInfo.shapeB.sensorColliding = true;
+                                continue;
+                            }
                             if (bodyJ.permeability > 0) {
                                 bodyI.velocity.x *= 1 - bodyJ.permeability;
                                 bodyI.velocity.y *= 1 - bodyJ.permeability;
@@ -607,14 +648,6 @@ export var physics;
         if (collision.depth >= D) {
             return;
         }
-        if (A.sensor) {
-            A.sensorColliding = true;
-            return;
-        }
-        if (B.sensor) {
-            B.sensorColliding = true;
-            return;
-        }
         collision.depth = D; // depth
         collision.normal.x = N.x; // normal
         collision.normal.y = N.y; // normal
@@ -629,12 +662,13 @@ export var physics;
             ? (Math.hypot(shape.width, shape.height) / 2, mass > 0 ? 1 / (mass * (shape.width ** 2 + shape.height ** 2) / 12) : 0) // rectangle
             : (mass > 0 ? (mass * shape.bounds ** 2) / 12 : 0); // circle;
     }
-    function createCircleShape(center, radius, sensor = false) {
+    function createCircleShape(world, center, radius, sensor = false) {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
         radius = Math.floor(radius);
         return {
+            id: world.nextId++,
             type: ShapeType.CIRCLE,
             center,
             bounds: radius,
@@ -645,7 +679,7 @@ export var physics;
         };
     }
     physics.createCircleShape = createCircleShape;
-    function createRectangleShape(center, width, height, ang = 0, sensor = false) {
+    function createRectangleShape(world, center, width, height, ang = 0, sensor = false) {
         // the original code only works well with whole number static objects
         center.x = Math.floor(center.x);
         center.y = Math.floor(center.y);
@@ -665,6 +699,7 @@ export var physics;
         const faceNormals = computeRectNormals(vertices);
         const bounds = Math.hypot(width, height) / 2;
         return {
+            id: world.nextId++,
             type: ShapeType.RECTANGLE,
             width, height, center, vertices, faceNormals,
             bounds,
@@ -687,10 +722,12 @@ export var physics;
             static: true,
             angle: 0,
             permeability: 0,
-            data: data ?? null
+            data: data ?? null,
+            type: "BODY"
         };
         for (const shape of shapes) {
             shape.inertia = calculateInertia(shape, mass);
+            shape.bodyId = staticBody.id;
         }
         if (!mass) {
             return staticBody;

@@ -11,6 +11,9 @@ import { sensorInit } from "./examples/Sensor.js";
 import { polyboxInit } from "./examples/Polybox.js";
 import { exclusionsInit } from "./examples/Exclusions.js";
 import { gooInit } from "./examples/Goo.js";
+import { compoundJointInit } from "./examples/CompoundJoint.js";
+import { car2Init } from "./examples/Car2.js";
+import { noGravityInit } from "./examples/NoGravity.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -64,10 +67,12 @@ function render() {
         ctx.strokeStyle = "yellow";
 
         const bodyA = bodies.find(b => b.id === joint.bodyA);
+        const centerA = joint.shapeA ? bodyA.shapes.find(s => s.id === joint.shapeA).center : bodyA.center
         const bodyB = bodies.find(b => b.id === joint.bodyB);
+        const centerB = joint.shapeB ? bodyB.shapes.find(s => s.id === joint.shapeB).center : bodyB.center
         ctx.beginPath();
-        ctx.moveTo(bodyA.center.x, bodyA.center.y);
-        ctx.lineTo(bodyB.center.x, bodyB.center.y);
+        ctx.moveTo(centerA.x, centerA.y);
+        ctx.lineTo(centerB.x, centerB.y);
         ctx.stroke();
     }
     for (const body of bodies.sort((a, b) => (a.static ? 0 : 1) - (b.static ? 0 : 1))) {
@@ -152,6 +157,7 @@ export function restart() {
 }
 
 const DEMOS: Demo[] = [
+    { name: "No Gravity", init: noGravityInit },
     { name: "Simple", init: simpleInit },
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
@@ -164,6 +170,8 @@ const DEMOS: Demo[] = [
     { name: "Polybox", init: polyboxInit },
     { name: "Exclusions", init: exclusionsInit },
     { name: "Goo", init: gooInit },
+    { name: "Compound Joint", init: compoundJointInit },
+    { name: "Car 2", init: car2Init },
 ];
 
 const demoList = document.getElementById("demo");
