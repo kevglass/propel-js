@@ -14,6 +14,7 @@ import { gooInit } from "./examples/Goo.js";
 import { compoundJointInit } from "./examples/CompoundJoint.js";
 import { car2Init } from "./examples/Car2.js";
 import { noGravityInit } from "./examples/NoGravity.js";
+import { car3Init } from "./examples/Car3.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -172,6 +173,7 @@ const DEMOS: Demo[] = [
     { name: "Compound Joint", init: compoundJointInit },
     { name: "Car 2", init: car2Init },
     { name: "No Gravity", init: noGravityInit },
+    { name: "Car 3", init: car3Init },
 ];
 
 const demoList = document.getElementById("demo");

@@ -287,6 +287,7 @@ export declare namespace physics {
      * @param world The world to step
      */
     export function worldStep(fps: number, world: World, dynamics?: DynamicRigidBody[]): Collision[];
+    export function collidingWithStatic(world: World, body: DynamicRigidBody, debug?: boolean): boolean;
     /**
      * Check if the physics system is at rest.
      *

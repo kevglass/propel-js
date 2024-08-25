@@ -518,6 +518,42 @@ export namespace physics {
         }
     };
 
+    function applyJoint(world: World, joint: Joint, body: Body, other: Body, fps: number): void {
+        const shapeId = joint.bodyA === body.id ? joint.shapeA : joint.shapeB;
+        const otherShapeId = joint.bodyA === body.id ? joint.shapeB : joint.shapeA;
+        const center = shapeId ? body.shapes.find(s => s.id === shapeId)!.center : body.center;
+        const otherCenter = otherShapeId ? other.shapes.find(s => s.id === otherShapeId)!.center : other.center;
+
+        let vec = subtractVec2(otherCenter, center)
+        const distance = lengthVec2(vec);
+        const diff = distance - joint.distance;
+        if (diff != 0) {
+            if (diff > 0) {
+                vec = scaleVec2(vec, (1 / distance) * diff * (1 - joint.elasticity) * (other.static ? 1 : 0.5));
+            } else {
+                vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
+            }
+            if (!joint.soft && !body.static) {
+                _moveBody(body, vec);
+            }
+            if (!body.static) {
+                body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
+
+                const por = subtractVec2(body.center, center);
+                if (lengthVec2(por) > 0) {
+                    let ang = Math.atan2(por.y, por.x) - Math.atan2(-vec.y, -vec.x);
+                    if (ang > Math.PI) {
+                        ang = Math.PI - ang;
+                    }
+                    if (ang < -Math.PI) {
+                        ang = (Math.PI * 2) + ang
+                    }
+                    body.angularVelocity -= ang / fps * (other.static ? 1 : 0.5)
+                }
+            }
+
+        }
+    }
     /**
      * Move the physics world through a step of a given time period.
      * 
@@ -570,68 +606,39 @@ export namespace physics {
             }
         }
 
-        // apply velocity to try and maintain joints
-        for (const body of dynamics) {
-            const joints = world.joints.filter(j => j.bodyA === body.id || j.bodyB === body.id);
-            for (const joint of joints) {
-                const otherId = joint.bodyA === body.id ? joint.bodyB : joint.bodyA;
-                const other = all.find(b => b.id === otherId);
-                if (other) {
-                    const shapeId = joint.bodyA === body.id ? joint.shapeA : joint.shapeB;
-                    const otherShapeId = joint.bodyA === body.id ? joint.shapeB : joint.shapeA
-                    const center = shapeId ? body.shapes.find(s => s.id === shapeId)!.center : body.center;
-                    const otherCenter = otherShapeId ? other.shapes.find(s => s.id === otherShapeId)!.center : other.center;
-
-                    let vec = subtractVec2(otherCenter, center)
-                    const distance = lengthVec2(vec);
-                    const diff = distance - joint.distance;
-                    if (diff != 0) {
-                        if (diff > 0) {
-                            vec = scaleVec2(vec, (1 / distance) * diff * (1 - joint.elasticity) * (other.static ? 1 : 0.5));
-                        } else {
-                            vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
-                        }
-                        if (!joint.soft) {
-                            _moveBody(body, vec);
-                        }
-                        body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
-
-                        const por = subtractVec2(body.center, center);
-                        if (lengthVec2(por) > 0) {
-                            let ang = Math.atan2(por.y, por.x) - Math.atan2(-vec.y, -vec.x);
-                            if (ang > Math.PI) {
-                                ang = Math.PI - ang;
-                            }
-                            if (ang < -Math.PI) {
-                                ang = (Math.PI * 2) + ang
-                            }
-                            body.angularVelocity -= ang / fps * (other.static ? 1 : 0.5)
-                        }
-
-                    }
-
-                    // if they're held together with no free move then
-                    // apply the dampening
-                    if (body.static || other.static) {
-                        if (!body.static) {
-                            body.velocity.x -= ((body.velocity.x * (1 - world.damp)) / fps) * world.jointRestriction;
-                            body.velocity.y -= ((body.velocity.y * (1 - world.damp)) / fps) * world.jointRestriction;
-                            body.angularVelocity -= ((body.angularVelocity * (1 - world.angularDamp)) / fps) * world.jointRestriction;
-                        }
-
-                        if (!other.static) {
-                            other.velocity.x -= ((other.velocity.x * (1 - world.damp)) / fps) * world.jointRestriction;
-                            other.velocity.y -= ((other.velocity.y * (1 - world.damp)) / fps) * world.jointRestriction;
-                            other.angularVelocity -= ((other.angularVelocity * (1 - world.angularDamp)) / fps) * world.jointRestriction;
-                        }
-                    }
-                }
-            }
-        }
 
         // Compute collisions and iterate to resolve
         for (let k = 9; k--;) {
             let collision = false;
+
+            // apply velocity to try and maintain joints
+            for (const body of dynamics) {
+                const joints = world.joints.filter(j => j.bodyA === body.id || j.bodyB === body.id);
+                for (const joint of joints) {
+                    const otherId = joint.bodyA === body.id ? joint.bodyB : joint.bodyA;
+                    const other = all.find(b => b.id === otherId);
+                    if (other) {
+                        applyJoint(world, joint, body, other, fps);
+                        applyJoint(world, joint, other, body, fps);
+
+                        // if they're held together with no free move then
+                        // apply the dampening
+                        if (body.static || other.static) {
+                            if (!body.static) {
+                                body.velocity.x -= ((body.velocity.x * (1 - world.damp)) / fps) * world.jointRestriction;
+                                body.velocity.y -= ((body.velocity.y * (1 - world.damp)) / fps) * world.jointRestriction;
+                                body.angularVelocity -= ((body.angularVelocity * (1 - world.angularDamp)) / fps) * world.jointRestriction;
+                            }
+
+                            if (!other.static) {
+                                other.velocity.x -= ((other.velocity.x * (1 - world.damp)) / fps) * world.jointRestriction;
+                                other.velocity.y -= ((other.velocity.y * (1 - world.damp)) / fps) * world.jointRestriction;
+                                other.angularVelocity -= ((other.angularVelocity * (1 - world.angularDamp)) / fps) * world.jointRestriction;
+                            }
+                        }
+                    }
+                }
+            }
 
             for (let i = dynamics.length; i--;) {
 
@@ -748,6 +755,27 @@ export namespace physics {
         }
 
         return collisions;
+    }
+
+    export function collidingWithStatic(world: World, body: DynamicRigidBody, debug = false): boolean {
+        const statics = world.staticBodies;
+
+        for (const other of statics) {
+            if (boundTest(body, other)) {
+                if (debug) {
+                    console.log(body, other)
+                    if (debug) {
+                        console.log("Collide", body.center.y, other.center.y, body.shapes[0], other.shapes[0]);
+                    }
+                }
+                let collisionInfo = EmptyCollision();
+                if (testCollision(world, body, other, collisionInfo)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
