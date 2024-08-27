@@ -21,8 +21,8 @@ export function car4Init() {
     const circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0);
     physics.addBody(world, circle2);
 
-    const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3);
-    const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3);
+    const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3, true);
+    const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3, true);
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
     chassis = physics.createRigidBody(world, { x: 170, y: 0 }, 1, friction, 0, [base, leftAnchor, rightAnchor]) as physics.DynamicRigidBody
     physics.addBody(world, chassis);
@@ -34,6 +34,6 @@ export function car4Init() {
 }
 
 export function car4Update() {
-    chassis.velocity.x = 100;
+    chassis.velocity.x = 150;
     return chassis;
 }
