@@ -538,7 +538,7 @@ export namespace physics {
                     if (ang < -Math.PI) {
                         ang = (Math.PI * 2) + ang
                     }
-                    body.angularVelocity += ang / fps * (other.static ? 1 : 0.5)
+                    body.angularVelocity += ang / fps
                 }
             }
             vec = subtractVec2(otherCenter, center)

@@ -34,6 +34,6 @@ export function car4Init() {
 }
 
 export function car4Update() {
-    chassis.velocity.x = 150;
+    chassis.velocity.x = 350;
     return chassis;
 }
