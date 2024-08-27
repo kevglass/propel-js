@@ -57,7 +57,7 @@ export function platformerInput(world: physics.World, input: string, on: boolean
     }
 }
 
-export function platformerUpdate(world: physics.World, collisions: physics.Collision[]) {
+export function platformerUpdate(world: physics.World, collisions: physics.Collision[]): physics.Body | undefined {
     player.velocity.x = (left ? -MOVE_SPEED : 0) + (right ? MOVE_SPEED : 0);
     player.restingTime = 0;
 
@@ -73,4 +73,6 @@ export function platformerUpdate(world: physics.World, collisions: physics.Colli
         }
         return false;
     }) != undefined;
+
+    return;
 }

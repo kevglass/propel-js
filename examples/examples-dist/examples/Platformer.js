@@ -63,4 +63,5 @@ export function platformerUpdate(world, collisions) {
         }
         return false;
     }) != undefined;
+    return;
 }

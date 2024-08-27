@@ -27,4 +27,5 @@ export function pileUpdate(world) {
         }
     }
     frameCount++;
+    return;
 }

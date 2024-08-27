@@ -320,27 +320,36 @@ export var physics;
         const distance = lengthVec2(vec);
         const diff = distance - joint.distance;
         if (diff != 0) {
-            if (diff > 0) {
-                vec = scaleVec2(vec, (1 / distance) * diff * (1 - joint.elasticity) * (other.static ? 1 : 0.5));
-            }
-            else {
-                vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
-            }
-            if (!joint.soft && !body.static) {
-                _moveBody(body, vec);
-            }
             if (!body.static) {
-                body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
-                const por = subtractVec2(body.center, center);
+                const por = subtractVec2(body.centerOfPhysics, center);
                 if (lengthVec2(por) > 0) {
-                    let ang = Math.atan2(por.y, por.x) - Math.atan2(-vec.y, -vec.x);
+                    let ang = Math.atan2(-vec.y, -vec.x) - Math.atan2(por.y, por.x);
                     if (ang > Math.PI) {
                         ang = Math.PI - ang;
                     }
                     if (ang < -Math.PI) {
                         ang = (Math.PI * 2) + ang;
                     }
-                    body.angularVelocity -= ang / fps * (other.static ? 1 : 0.5);
+                    body.angularVelocity += ang / fps * (other.static ? 1 : 0.5);
+                }
+            }
+            vec = subtractVec2(otherCenter, center);
+            const distance = lengthVec2(vec);
+            const diff = distance - joint.distance;
+            if (diff != 0) {
+                if (diff > 0) {
+                    vec = scaleVec2(vec, (1 / distance) * diff * (1 - joint.elasticity) * (other.static ? 1 : 0.5));
+                }
+                else {
+                    vec = scaleVec2(vec, (1 / distance) * diff * joint.rigidity * (other.static ? 1 : 0.5));
+                }
+                // if the connected piece is a shape in a composite instead of a pure body
+                // then consider rotating the shape to solve the joint rather than moving the body
+                if (!joint.soft && !body.static) {
+                    _moveBody(body, vec);
+                }
+                if (!body.static) {
+                    body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
                 }
             }
         }

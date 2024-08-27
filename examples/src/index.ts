@@ -15,6 +15,7 @@ import { compoundJointInit } from "./examples/CompoundJoint.js";
 import { car2Init } from "./examples/Car2.js";
 import { noGravityInit } from "./examples/NoGravity.js";
 import { car3Init } from "./examples/Car3.js";
+import { car4Init, car4Update } from "./examples/Car4.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -40,7 +41,7 @@ let world;
 let currentDemo;
 
 export type DemoInit = () => physics.World;
-export type DemoUpdate = (world: physics.World, collisions: physics.Collision[]) => void;
+export type DemoUpdate = (world: physics.World, collisions: physics.Collision[]) => physics.Body | undefined;
 export type DemoInput = (world: physics.World, input: string, on: boolean) => void;
 
 export interface Demo {
@@ -55,14 +56,21 @@ function render() {
     requestAnimationFrame(render);
     const collisions = physics.worldStep(60, world);
 
+    let focusBody: physics.Body | undefined = undefined;
+
     if (currentDemo.update) {
-        currentDemo.update(world, collisions);
+        focusBody = currentDemo.update(world, collisions);
     }
 
+    ctx.reset()
+    ctx.resetTransform();
     ctx.lineWidth = 3;
 
     ctx.clearRect(0, 0, 500, 500);
 
+    if (focusBody) {
+        ctx.translate(-(focusBody.center.x-250), -(focusBody.center.y-250));
+    }
     const bodies = physics.allBodies(world);
     for (const joint of world.joints) {
         ctx.strokeStyle = "yellow";
@@ -171,9 +179,9 @@ const DEMOS: Demo[] = [
     { name: "Exclusions", init: exclusionsInit },
     { name: "Goo", init: gooInit },
     { name: "Compound Joint", init: compoundJointInit },
-    { name: "Car 2", init: car2Init },
     { name: "No Gravity", init: noGravityInit },
-    { name: "Car 3", init: car3Init },
+    { name: "Car Flat", init: car3Init },
+    { name: "Car Road", init: car4Init, update: car4Update},
 ];
 
 const demoList = document.getElementById("demo");

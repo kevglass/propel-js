@@ -12,7 +12,7 @@ export function pileInit(): physics.World {
     return world;
 }
 
-export function pileUpdate(world: physics.World) {
+export function pileUpdate(world: physics.World): physics.Body | undefined {
     if (frameCount % 30 === 0) {
         if (Math.random() < 0.5) {
             const circle = physics.createCircle(world, { x: 50 + Math.floor(Math.random()* 400), y: 0 }, 20 + (Math.random() * 20), 1, 0.5, 1);
@@ -31,4 +31,6 @@ export function pileUpdate(world: physics.World) {
         }
     }
     frameCount++;
+
+    return
 }
