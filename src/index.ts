@@ -581,7 +581,7 @@ export namespace physics {
 
         const allEnabled = enabledBodies(world, dynamics);
         const all = allBodies(world, dynamics);
-        const collisions: Collision[] = [];
+        let collisions: Collision[] = [];
 
         // clear all the sensors
         for (const body of all) {
@@ -678,7 +678,6 @@ export namespace physics {
                         // Test collision
                         let collisionInfo = EmptyCollision();
                         if (testCollision(world, bodyI, bodyJ, collisionInfo)) {
-
                             if (collisionInfo.shapeA && collisionInfo.shapeA.sensor) {
                                 collisionInfo.shapeA.sensorColliding = true;
                                 continue;
@@ -696,21 +695,21 @@ export namespace physics {
                             }
 
                             if (!bodyI.static) {
-                                if (bodyI.shapes.includes(collisionInfo.shapeA!)) {
+                                if (bodyI.shapes.includes(collisionInfo.shapeA!) && !collisionInfo.shapeA!.sensor) {
                                     bodyI.centerOfPhysics = { ...collisionInfo.shapeA!.center }
                                     bodyI.inertia = collisionInfo.shapeA!.inertia;
                                 }
-                                if (bodyI.shapes.includes(collisionInfo.shapeB!)) {
+                                if (bodyI.shapes.includes(collisionInfo.shapeB!) && !collisionInfo.shapeB!.sensor) {
                                     bodyI.centerOfPhysics = { ...collisionInfo.shapeB!.center }
                                     bodyI.inertia = collisionInfo.shapeB!.inertia;
                                 }
                             }
                             if (!bodyJ.static) {
-                                if (bodyJ.shapes.includes(collisionInfo.shapeA!)) {
+                                if (bodyJ.shapes.includes(collisionInfo.shapeA!) && !collisionInfo.shapeA!.sensor) {
                                     bodyJ.centerOfPhysics = { ...collisionInfo.shapeA!.center }
                                     bodyJ.inertia = collisionInfo.shapeA!.inertia;
                                 }
-                                if (bodyJ.shapes.includes(collisionInfo.shapeB!)) {
+                                if (bodyJ.shapes.includes(collisionInfo.shapeB!) && !collisionInfo.shapeB!.sensor) {
                                     bodyJ.centerOfPhysics = { ...collisionInfo.shapeB!.center }
                                     bodyJ.inertia = collisionInfo.shapeB!.inertia;
                                 }
@@ -731,6 +730,8 @@ export namespace physics {
                             // Resolve collision
                             if (resolveCollision(world, bodyI, bodyJ, collisionInfo)) {
                                 collision = true;
+                                collisions = collisions.filter(c => c.bodyAId !== bodyI.id && c.bodyBId !== bodyJ.id);
+
                                 collisions.push({
                                     bodyAId: bodyI.id,
                                     bodyBId: bodyJ.id,
@@ -1192,7 +1193,6 @@ export namespace physics {
 
         for (let c1 of b1.shapes) {
             for (let c2 of b2.shapes) {
-
                 // Circle vs circle
                 if (c1.type == ShapeType.CIRCLE && c2.type === ShapeType.CIRCLE) {
                     const

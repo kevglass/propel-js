@@ -116,7 +116,7 @@ function render() {
                     ctx.fillStyle = "yellow";
                     ctx.beginPath();
                     ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
-                    ctx.stroke();
+                    ctx.fill();
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
                     ctx.lineTo(0, shape.bounds);
