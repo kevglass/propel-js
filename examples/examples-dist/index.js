@@ -15,6 +15,7 @@ import { compoundJointInit } from "./examples/CompoundJoint.js";
 import { noGravityInit } from "./examples/NoGravity.js";
 import { car3Init } from "./examples/Car3.js";
 import { car4Init, car4Update } from "./examples/Car4.js";
+import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -146,6 +147,7 @@ const DEMOS = [
     { name: "No Gravity", init: noGravityInit },
     { name: "Car Flat", init: car3Init },
     { name: "Car Road", init: car4Init, update: car4Update },
+    { name: "Car Interactive", init: carInteractiveInit, input: carInteractiveInput, update: carInteractiveUpdate },
 ];
 const demoList = document.getElementById("demo");
 for (const demo of DEMOS) {
