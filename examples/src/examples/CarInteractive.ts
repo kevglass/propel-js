@@ -12,6 +12,8 @@ const CAR_ACCEL: number = 1000;
 const CAR_TILT: number = 2
 
 let lastOnGround = Date.now();
+let rightSensor: physics.Circle;
+let leftSensor: physics.Circle;
 
 // jointed car
 export function carInteractiveInit() {
@@ -36,8 +38,9 @@ export function carInteractiveInit() {
     const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3);
     const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3);
 
-    const leftSensor = physics.createCircleShape(world, { x: 150, y: 0 }, 15, true);
-    const rightSensor = physics.createCircleShape(world, { x: 190, y: 0 }, 15, true);
+    // give them a bit of padding to consume the resolution of wheels against floor
+    leftSensor = physics.createCircleShape(world, { x: 150, y: 0 }, 16.5, true);
+    rightSensor = physics.createCircleShape(world, { x: 190, y: 0 }, 16.5, true);
 
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
     chassis = physics.createRigidBody(world, { x: 170, y: 10 }, 1, friction, 0, [base, leftAnchor, rightAnchor,leftSensor, rightSensor]) as physics.DynamicRigidBody
@@ -68,28 +71,17 @@ export function carInteractiveInput(world: physics.World, input: string, on: boo
 }
 
 export function carInteractiveUpdate(world: physics.World, collisions: physics.Collision[]) {
-    const hasCollisionCircle1 = collisions.some(c => c.bodyAId === circle1.id || c.bodyBId === circle1.id);
-    const hasCollisionCircle2 = collisions.some(c => c.bodyAId === circle2.id || c.bodyBId === circle2.id);
-    const isMidAir = !hasCollisionCircle1 && !hasCollisionCircle2;
-
-    if (!isMidAir) {
-        lastOnGround = Date.now();
-    }
-
-    // single wheels are constantly bouncing we can get frames where they're both off the
-    // ground (just) so account for these
-    const inFlight = Date.now() - lastOnGround > 50;
+    const isMidAir = !leftSensor.sensorColliding && !rightSensor.sensorColliding
 
     chassis.restingTime = 0;
     circle1.restingTime = 0;
     circle2.restingTime = 0;
 
     const delta = 1 / 60;
-    const input = (right ? 1 : 0) - (left ? 1 : 0);
 
     // since we're sure the body is on the ground it ok to drive the chassis forward since it
     // gives uniform velocity to the wheels
-    if (!inFlight) {
+    if (!isMidAir) {
         if (left) {
             chassis.velocity.x = Math.max(-MAX_VELOCITY, chassis.velocity.x - CAR_ACCEL * delta)
         } 
@@ -101,7 +93,7 @@ export function carInteractiveUpdate(world: physics.World, collisions: physics.C
     // if we've been off the ground for a bit then allow explicitly tilting the car. Note that
     // this is totally non-physical so we're giving the player direct control of the car's angle
     // and want to ignore any other velocity/acceleration on it
-    if (inFlight) {
+    if (isMidAir) {
         if (left) {
             physics.rotateBody(chassis, -CAR_TILT * delta);
             chassis.angularVelocity = 0;

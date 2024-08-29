@@ -86,10 +86,11 @@ function render() {
                 ctx.lineTo(0, shape.bounds);
                 ctx.stroke();
                 if (shape.sensor && shape.sensorColliding) {
-                    ctx.fillStyle = "yellow";
+                    ctx.fillStyle = "rgba(255,255,0,0.5)";
                     ctx.beginPath();
                     ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.fillStyle = "yellow";
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
                     ctx.lineTo(0, shape.bounds);

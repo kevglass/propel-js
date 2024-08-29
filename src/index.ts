@@ -919,6 +919,14 @@ export namespace physics {
         if (collision.depth >= D) {
             return;
         }
+        if (A.sensor) {
+            A.sensorColliding = true;
+            return;
+        }
+        if (B.sensor) {
+            B.sensorColliding = true;
+            return;
+        }
 
         collision.depth = D; // depth
         collision.normal.x = N.x; // normal
