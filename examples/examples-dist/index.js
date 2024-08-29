@@ -86,7 +86,7 @@ function render() {
                 ctx.lineTo(0, shape.bounds);
                 ctx.stroke();
                 if (shape.sensor && shape.sensorColliding) {
-                    ctx.fillStyle = "rgba(255,255,0,0.5)";
+                    ctx.fillStyle = "rgba(255,255,0,0.7)";
                     ctx.beginPath();
                     ctx.arc(0, 0, shape.bounds, 0, Math.PI * 2);
                     ctx.fill();
@@ -99,7 +99,7 @@ function render() {
                 ctx.restore();
             }
             if (shape.type === physics.ShapeType.RECTANGLE) {
-                ctx.fillStyle = "yellow";
+                ctx.fillStyle = "rgba(255,255,0,0.7)";
                 ctx.save();
                 ctx.translate(shape.center.x, shape.center.y);
                 ctx.rotate(body.angle + shape.angle);
