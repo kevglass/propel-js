@@ -559,7 +559,7 @@ export namespace physics {
                     _moveBody(body, vec);
                 }
                 if (!body.static) {
-                    body.velocity = addVec2(body.velocity, scaleVec2(vec, fps));
+                    body.velocity = addVec2(body.velocity, scaleVec2(vec, joint.soft ? 1 : fps));
                 }
             }
 

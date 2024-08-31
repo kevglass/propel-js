@@ -22,9 +22,9 @@ export function gooInit(): physics.World {
 
     for (let i=0;i<ptCount;i++) {
         let j = (i + Math.floor(ptCount / 2)) % ptCount;
-        physics.createJoint(world, bodies[i], bodies[j], 0.005, 0.01, true);
+        physics.createJoint(world, bodies[i], bodies[j], 0.05, 0.01, true);
         j = (i + 1) % ptCount;
-        physics.createJoint(world, bodies[i], bodies[j], 0.005, 0.01, true);
+        physics.createJoint(world, bodies[i], bodies[j], 0.05, 0.01, true);
     }
 
     return world;
