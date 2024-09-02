@@ -8,6 +8,16 @@ A free, open source, teeny weeny physics library for typescript. Mostly just som
 
 [Examples](https://kevglass.github.io/propel-js/examples/)
 
+## Install
+
+```
+    npm install propel-js
+
+    or 
+
+    yarn add propel-js
+```
+
 ## Why?
 
 When working with networked physics games it's useful to be able to seralize state to send across the wire. Other physics
