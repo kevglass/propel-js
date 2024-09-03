@@ -4,6 +4,10 @@ export function marbleInit() {
     const world = physics.createWorld();
     world.damp = 0.99;
     world.angularDamp = 0.95;
+    const marble1 = physics.createCircle(world, { x: 225, y: -100 }, 20, 2, 0.3, 0.3);
+    physics.addBody(world, marble1);
+    const marble2 = physics.createCircle(world, { x: 275, y: -200 }, 20, 2, 0.3, 0.3);
+    physics.addBody(world, marble2);
     const slope1 = physics.createRectangle(world, { x: 200, y: 200 }, 200, 10, 0, 0.3, 0.3);
     physics.rotateBody(slope1, Math.PI / 6);
     physics.addBody(world, slope1);
@@ -18,9 +22,5 @@ export function marbleInit() {
     physics.addBody(world, wheelJoint);
     physics.excludeCollisions(world, wheel, wheelJoint);
     physics.createJoint(world, wheel, wheelJoint, 0, 0);
-    const marble1 = physics.createCircle(world, { x: 225, y: -100 }, 20, 2, 0.3, 0.3);
-    physics.addBody(world, marble1);
-    const marble2 = physics.createCircle(world, { x: 275, y: -200 }, 20, 2, 0.3, 0.3);
-    physics.addBody(world, marble2);
     return world;
 }
