@@ -30,11 +30,6 @@ export function carInteractiveInit() {
 
         physics.rotateBody(rect, i % 2 === 0 ? 0.2 : -0.2 )
     }
-    circle1 = physics.createCircle(world, { x: 150, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
-    physics.addBody(world, circle1);
-    circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
-    physics.addBody(world, circle2);
-
     const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3);
     const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3);
 
@@ -45,6 +40,12 @@ export function carInteractiveInit() {
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
     chassis = physics.createRigidBody(world, { x: 170, y: 10 }, 1, friction, 0, [base, leftAnchor, rightAnchor,leftSensor, rightSensor]) as physics.DynamicRigidBody
     physics.addBody(world, chassis);
+
+    circle1 = physics.createCircle(world, { x: 150, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
+    physics.addBody(world, circle1);
+    circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
+    physics.addBody(world, circle2);
+
     physics.excludeCollisions(world, chassis, circle1);
     physics.excludeCollisions(world, chassis, circle2);
     physics.createJoint(world, circle1, leftSensor, 1, 0);
