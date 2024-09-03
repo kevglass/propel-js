@@ -775,7 +775,6 @@ export namespace physics {
         for (const other of statics) {
             if (boundTest(body, other)) {
                 if (debug) {
-                    console.log(body, other)
                     if (debug) {
                         console.log("Collide", body.center.y, other.center.y, body.shapes[0], other.shapes[0]);
                     }
@@ -1199,8 +1198,17 @@ export namespace physics {
             return false;
         }
 
-        for (let c1 of b1.shapes) {
-            for (let c2 of b2.shapes) {
+        let originalB1 = b1;
+        let originalB2 = b2;
+
+        for (let firstShape of b1.shapes) {
+            for (let secondShape of b2.shapes) {
+                let c1 = firstShape;
+                let c2 = secondShape;
+
+                b1 = originalB1;
+                b2 = originalB2;
+
                 // Circle vs circle
                 if (c1.type == ShapeType.CIRCLE && c2.type === ShapeType.CIRCLE) {
                     const
