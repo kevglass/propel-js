@@ -558,8 +558,14 @@ export namespace physics {
                 if (!joint.soft && !body.static) {
                     _moveBody(body, vec);
                 }
+                if (!joint.soft && !other.static) {
+                    _moveBody(other, scaleVec2(vec, -1));
+                }
                 if (!body.static) {
-                    body.velocity = addVec2(body.velocity, scaleVec2(vec, joint.soft ? 1 : fps));
+                    body.velocity = addVec2(body.velocity, scaleVec2(vec, joint.soft ? 1 : fps / 2));
+                }
+                if (!other.static) {
+                    other.velocity = addVec2(other.velocity, scaleVec2(vec, -(joint.soft ? 1 : fps / 2)));
                 }
             }
 
@@ -630,7 +636,6 @@ export namespace physics {
                     const other = all.find(b => b.id === otherId);
                     if (other) {
                         applyJoint(world, joint, body, other, fps);
-                        applyJoint(world, joint, other, body, fps);
 
                         // if they're held together with no free move then
                         // apply the dampening

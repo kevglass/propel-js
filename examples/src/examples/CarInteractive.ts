@@ -8,7 +8,7 @@ let left: boolean = false;
 let right: boolean = false;
 
 const MAX_VELOCITY: number = 10000;
-const CAR_ACCEL: number = 1000;
+const CAR_ACCEL: number = 2000;
 const CAR_TILT: number = 2
 
 let lastOnGround = Date.now();
@@ -40,11 +40,11 @@ export function carInteractiveInit() {
 
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
     chassis = physics.createRigidBody(world, { x: 170, y: 10 }, 1, friction, 0, [base, leftAnchor, rightAnchor,leftSensor, rightSensor]) as physics.DynamicRigidBody
-    physics.addBody(world, chassis);
-
     circle1 = physics.createCircle(world, { x: 150, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
-    physics.addBody(world, circle1);
     circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0) as physics.DynamicRigidBody;
+
+    physics.addBody(world, chassis);
+    physics.addBody(world, circle1);
     physics.addBody(world, circle2);
 
     
