@@ -759,7 +759,7 @@ export var physics;
     }
     physics.createRectangleShape = createRectangleShape;
     // New shape
-    function createRigidBody(world, center, mass, friction, restitution, shapes, data) {
+    function createRigidBody(world, center, mass, friction, restitution, shapes, data, floating = false) {
         const staticBody = {
             id: world.nextId++,
             center,
@@ -787,14 +787,15 @@ export var physics;
                 centerOfPhysics: { ...center },
                 mass: 1 / mass, // inverseMass
                 velocity: newVec2(0, 0), // velocity (speed)
-                acceleration: world.gravity, // acceleration
+                acceleration: floating ? { x: 0, y: 0 } : world.gravity, // acceleration
                 averageAngle: 0,
                 angularVelocity: 0, // angle velocity
                 angularAcceleration: 0, // angle acceleration,
                 inertia: calculateInertia(shapes[0], mass),
                 restingTime: 0,
                 fixedPosition: false,
-                fixedRotation: false
+                fixedRotation: false,
+                floating
             };
             return dynamicBody;
         }

@@ -175,6 +175,8 @@ export namespace physics {
         fixedPosition: boolean;
         /** The center of rotation based on the last collision */
         centerOfPhysics: Vector2;
+        /** True if the body isn't effected by gravity */
+        floating: boolean;
     }
 
     export type Body = StaticRigidBody | DynamicRigidBody
@@ -1002,7 +1004,7 @@ export namespace physics {
     }
 
     // New shape
-    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body {
+    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any, floating = false): Body {
         const staticBody: StaticRigidBody = {
             id: world.nextId++,
             center,
@@ -1031,14 +1033,15 @@ export namespace physics {
                 centerOfPhysics: { ...center },
                 mass: 1 / mass, // inverseMass
                 velocity: newVec2(0, 0), // velocity (speed)
-                acceleration: world.gravity, // acceleration
+                acceleration: floating ? { x: 0, y: 0} : world.gravity, // acceleration
                 averageAngle: 0,
                 angularVelocity: 0, // angle velocity
                 angularAcceleration: 0, // angle acceleration,
                 inertia: calculateInertia(shapes[0], mass),
                 restingTime: 0,
                 fixedPosition: false,
-                fixedRotation: false
+                fixedRotation: false,
+                floating
             }
             return dynamicBody
         }

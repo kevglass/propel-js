@@ -142,6 +142,8 @@ export declare namespace physics {
         fixedPosition: boolean;
         /** The center of rotation based on the last collision */
         centerOfPhysics: Vector2;
+        /** True if the body isn't effected by gravity */
+        floating: boolean;
     }
     export type Body = StaticRigidBody | DynamicRigidBody;
     /**
@@ -369,7 +371,7 @@ export declare namespace physics {
     export function normalize(v: Vector2): Vector2;
     export function createCircleShape(world: World, center: Vector2, radius: number, sensor?: boolean): Circle;
     export function createRectangleShape(world: World, center: Vector2, width: number, height: number, ang?: number, sensor?: boolean): Rectangle;
-    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any): Body;
+    export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any, floating?: boolean): Body;
     /**
      * Add a body to the world
      *
