@@ -610,6 +610,10 @@ export namespace physics {
             if (!body.velocity && !body.acceleration) {
                 continue
             }
+            // if a body has had velocity applied then consider it not at rest
+            if (lengthVec2(body.velocity) > 1) {
+                body.restingTime = 0
+            }
             if (bodyAtRest(world, body)) {
                 continue;
             }
