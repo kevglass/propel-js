@@ -17,6 +17,7 @@ import { car3Init } from "./examples/Car3.js";
 import { car4Init, car4Update } from "./examples/Car4.js";
 import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive.js";
 import { marbleInit } from "./examples/Marble.js";
+import { wobblyJointsInit } from "./examples/WobblyJoints.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -137,6 +138,7 @@ const DEMOS = [
     { name: "Stacks", init: stackInit },
     { name: "Pile", init: pileInit, update: pileUpdate },
     { name: "Joints", init: jointsInit },
+    { name: "Wobbly Joints", init: wobblyJointsInit },
     { name: "Car", init: carInit },
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
