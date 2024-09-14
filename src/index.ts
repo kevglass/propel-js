@@ -34,6 +34,8 @@ export namespace physics {
         sensor: boolean;
         /** True if this sensor is currently triggered */
         sensorColliding: boolean;
+        /** The IDs of the shapes that are colliding with this sensor */
+        sensorCollisions: number[];
         /** The inertia applied when this shape is colliding */
         inertia: number;
         /** The ID of the body this shape is part of */
@@ -598,6 +600,7 @@ export namespace physics {
                     return;
                 }
                 s.sensorColliding = false;
+                s.sensorCollisions = [];
             });
         }
 
@@ -687,10 +690,16 @@ export namespace physics {
                         if (testCollision(world, bodyI, bodyJ, collisionInfo)) {
                             if (collisionInfo.shapeA && collisionInfo.shapeA.sensor) {
                                 collisionInfo.shapeA.sensorColliding = true;
+                                if (collisionInfo.shapeB) {
+                                    collisionInfo.shapeA.sensorCollisions.push(collisionInfo.shapeB.id);
+                                }
                                 continue;
                             }
                             if (collisionInfo.shapeB && collisionInfo.shapeB.sensor) {
                                 collisionInfo.shapeB.sensorColliding = true;
+                                if (collisionInfo.shapeA) {
+                                    collisionInfo.shapeB.sensorCollisions.push(collisionInfo.shapeA.id);
+                                }
                                 continue;
                             }
 
@@ -927,10 +936,12 @@ export namespace physics {
         }
         if (A.sensor) {
             A.sensorColliding = true;
+            A.sensorCollisions.push(B.id);
             return;
         }
         if (B.sensor) {
             B.sensorColliding = true;
+            B.sensorCollisions.push(A.id);
             return;
         }
 
@@ -964,6 +975,7 @@ export namespace physics {
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
             sensor,
             sensorColliding: false,
+            sensorCollisions: [],
             inertia: 0
         }
     }
@@ -998,6 +1010,7 @@ export namespace physics {
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
             sensorColliding: false,
+            sensorCollisions: [],
             inertia: 0,
             angle: ang
         }

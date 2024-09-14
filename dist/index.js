@@ -382,6 +382,7 @@ export var physics;
                     return;
                 }
                 s.sensorColliding = false;
+                s.sensorCollisions = [];
             });
         }
         for (const body of dynamics) {
@@ -462,10 +463,16 @@ export var physics;
                         if (testCollision(world, bodyI, bodyJ, collisionInfo)) {
                             if (collisionInfo.shapeA && collisionInfo.shapeA.sensor) {
                                 collisionInfo.shapeA.sensorColliding = true;
+                                if (collisionInfo.shapeB) {
+                                    collisionInfo.shapeA.sensorCollisions.push(collisionInfo.shapeB.id);
+                                }
                                 continue;
                             }
                             if (collisionInfo.shapeB && collisionInfo.shapeB.sensor) {
                                 collisionInfo.shapeB.sensorColliding = true;
+                                if (collisionInfo.shapeA) {
+                                    collisionInfo.shapeB.sensorCollisions.push(collisionInfo.shapeA.id);
+                                }
                                 continue;
                             }
                             if (bodyJ.permeability > 0) {
@@ -689,10 +696,12 @@ export var physics;
         }
         if (A.sensor) {
             A.sensorColliding = true;
+            A.sensorCollisions.push(B.id);
             return;
         }
         if (B.sensor) {
             B.sensorColliding = true;
+            B.sensorCollisions.push(A.id);
             return;
         }
         collision.depth = D; // depth
@@ -722,6 +731,7 @@ export var physics;
             boundingBox: calcBoundingBox(ShapeType.CIRCLE, radius, [], center),
             sensor,
             sensorColliding: false,
+            sensorCollisions: [],
             inertia: 0
         };
     }
@@ -753,6 +763,7 @@ export var physics;
             boundingBox: calcBoundingBox(ShapeType.RECTANGLE, bounds, vertices, center),
             sensor,
             sensorColliding: false,
+            sensorCollisions: [],
             inertia: 0,
             angle: ang
         };

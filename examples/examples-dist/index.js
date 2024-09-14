@@ -17,6 +17,7 @@ import { car3Init } from "./examples/Car3.js";
 import { car4Init, car4Update } from "./examples/Car4.js";
 import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive.js";
 import { marbleInit } from "./examples/Marble.js";
+import { teleporterInit, teleporterUpdate } from "./examples/Teleporter.js";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -141,6 +142,7 @@ const DEMOS = [
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
+    { name: "Teleporter", init: teleporterInit, update: teleporterUpdate },
     { name: "Compound", init: compoundInit },
     { name: "Polybox", init: polyboxInit },
     { name: "Exclusions", init: exclusionsInit },
