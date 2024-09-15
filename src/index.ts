@@ -120,6 +120,8 @@ export namespace physics {
         bodyBId: number;
         /** The penetration depth of the collision */
         depth: number;
+        /** The starting position of the collision */
+        start: Vector2;
     }
 
     interface BodyCore {
@@ -751,7 +753,8 @@ export namespace physics {
                                 collisions.push({
                                     bodyAId: bodyI.id,
                                     bodyBId: bodyJ.id,
-                                    depth: collisionInfo.depth
+                                    depth: collisionInfo.depth,
+                                    start: collisionInfo.start,
                                 });
                             }
                         }

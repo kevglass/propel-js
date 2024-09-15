@@ -519,7 +519,8 @@ export var physics;
                                 collisions.push({
                                     bodyAId: bodyI.id,
                                     bodyBId: bodyJ.id,
-                                    depth: collisionInfo.depth
+                                    depth: collisionInfo.depth,
+                                    start: collisionInfo.start,
                                 });
                             }
                         }
