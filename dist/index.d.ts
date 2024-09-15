@@ -27,6 +27,8 @@ export declare namespace physics {
         sensor: boolean;
         /** True if this sensor is currently triggered */
         sensorColliding: boolean;
+        /** The IDs of the shapes that are colliding with this sensor */
+        sensorCollisions: number[];
         /** The inertia applied when this shape is colliding */
         inertia: number;
         /** The ID of the body this shape is part of */
@@ -88,6 +90,8 @@ export declare namespace physics {
         bodyBId: number;
         /** The penetration depth of the collision */
         depth: number;
+        /** The starting position of the collision */
+        start: Vector2;
     }
     interface BodyCore {
         /** The unique ID of this body */

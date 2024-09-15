@@ -19,6 +19,7 @@ import { car4Init, car4Update } from "./examples/Car4.js";
 import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive.js";
 import { marbleInit } from "./examples/Marble.js";
 import { wobblyJointsInit } from "./examples/WobblyJoints.js";
+import { teleporterInit, teleporterUpdate } from "./examples/Teleporter.js";
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -179,6 +180,7 @@ const DEMOS: Demo[] = [
     { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
+    { name: "Teleporter", init: teleporterInit, update: teleporterUpdate },
     { name: "Compound", init: compoundInit },
     { name: "Polybox", init: polyboxInit },
     { name: "Exclusions", init: exclusionsInit },
