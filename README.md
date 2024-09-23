@@ -34,9 +34,9 @@ in serializable structures with functions/resolvers outside of the data.
 
 More added as time permits.
 
-## Dusk Compatible
+## Rune Compatible
 
-This was built to support physics in networked games on the [Dusk Platform](https://developers.dusk.gg)
+This was built to support physics in networked games on the [Rune Platform](https://developers.rune.ai)
 
 ## Credits
 
