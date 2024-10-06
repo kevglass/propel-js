@@ -294,7 +294,7 @@ export var physics;
         // Update angle
         body.angle += angle;
         if (!body.static) {
-            body.averageAngle = angle;
+            body.averageAngle = body.angle;
         }
         const center = body.static ? body.center : body.centerOfPhysics;
         body.center = rotateVec2(body.center, center, angle);
@@ -389,8 +389,7 @@ export var physics;
             if (!body.velocity && !body.acceleration) {
                 continue;
             }
-            // if a body has had velocity applied then consider it not at rest
-            if (lengthVec2(body.velocity) > 1) {
+            if (body.velMag !== lengthVec2(body.velocity)) {
                 body.restingTime = 0;
             }
             if (bodyAtRest(world, body)) {
@@ -550,6 +549,8 @@ export var physics;
                 body.averageAngle = body.angle;
                 body.restingTime = 0;
             }
+            // if a body has had velocity applied then consider it not at rest
+            body.velMag = lengthVec2(body.velocity);
         }
         return collisions;
     }
@@ -802,6 +803,7 @@ export var physics;
                 averageCenter: newVec2(center.x, center.y),
                 centerOfPhysics: { ...center },
                 mass: 1 / mass, // inverseMass
+                velMag: 0,
                 velocity: newVec2(0, 0), // velocity (speed)
                 acceleration: floating ? { x: 0, y: 0 } : world.gravity, // acceleration
                 averageAngle: 0,

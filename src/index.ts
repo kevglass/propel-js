@@ -159,6 +159,8 @@ export namespace physics {
         averageCenter: Vector2;
         /** The mass of the body - must be non-zero for dynamic bodies */
         mass: number,
+        /** The last magnitude of velocity - check to see if user applied velocity */
+        velMag: number,
         /** The current velocity of the body */
         velocity: Vector2,
         /** The current acceleration of the body */
@@ -506,7 +508,7 @@ export namespace physics {
         // Update angle
         body.angle += angle;
         if (!body.static) {
-            body.averageAngle = angle;
+            body.averageAngle = body.angle;
         }
 
         const center = body.static ? body.center : body.centerOfPhysics;
@@ -610,8 +612,7 @@ export namespace physics {
             if (!body.velocity && !body.acceleration) {
                 continue
             }
-            // if a body has had velocity applied then consider it not at rest
-            if (lengthVec2(body.velocity) > 1) {
+            if (body.velMag !== lengthVec2(body.velocity)) {
                 body.restingTime = 0
             }
             if (bodyAtRest(world, body)) {
@@ -782,11 +783,13 @@ export namespace physics {
             if (Math.abs(body.center.y - body.averageCenter.y) > 0.1) {
                 body.averageCenter.y = body.center.y;
                 body.restingTime = 0;
-            }
+            } 
             if (Math.abs(body.angle - body.averageAngle) >= 0.05) {
                 body.averageAngle = body.angle;
                 body.restingTime = 0;
             }
+            // if a body has had velocity applied then consider it not at rest
+            body.velMag = lengthVec2(body.velocity)
         }
 
         return collisions;
@@ -1052,6 +1055,7 @@ export namespace physics {
                 averageCenter: newVec2(center.x, center.y),
                 centerOfPhysics: { ...center },
                 mass: 1 / mass, // inverseMass
+                velMag: 0,
                 velocity: newVec2(0, 0), // velocity (speed)
                 acceleration: floating ? { x: 0, y: 0} : world.gravity, // acceleration
                 averageAngle: 0,

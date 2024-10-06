@@ -126,6 +126,8 @@ export declare namespace physics {
         averageCenter: Vector2;
         /** The mass of the body - must be non-zero for dynamic bodies */
         mass: number;
+        /** The last magnitude of velocity - check to see if user applied velocity */
+        velMag: number;
         /** The current velocity of the body */
         velocity: Vector2;
         /** The current acceleration of the body */
