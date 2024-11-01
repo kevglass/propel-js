@@ -927,6 +927,17 @@ export namespace physics {
         return scaleVec2(v, 1 / (lengthVec2(v) || 1));
     }
 
+    /**
+     * Apply velocity to a body
+     * 
+     * @param body The target body
+     * @param vel The velocity to apply
+     */
+    export function applyVelocity(body: DynamicRigidBody, vel: Vector2): void {
+        body.velocity.x += vel.x
+        body.velocity.y += vel.y
+        body.restingTime = 0
+    }
 
     const EmptyCollision = (): CollisionDetails => {
         return {
