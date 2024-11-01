@@ -375,6 +375,13 @@ export declare namespace physics {
      * @returns The newly created normalized vector
      */
     export function normalize(v: Vector2): Vector2;
+    /**
+     * Apply velocity to a body
+     *
+     * @param body The target body
+     * @param vel The velocity to apply
+     */
+    export function applyVelocity(body: DynamicRigidBody, vel: Vector2): void;
     export function createCircleShape(world: World, center: Vector2, radius: number, sensor?: boolean): Circle;
     export function createRectangleShape(world: World, center: Vector2, width: number, height: number, ang?: number, sensor?: boolean): Rectangle;
     export function createRigidBody(world: World, center: Vector2, mass: number, friction: number, restitution: number, shapes: Shape[], data?: any, floating?: boolean): Body;

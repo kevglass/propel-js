@@ -685,6 +685,19 @@ export var physics;
         return scaleVec2(v, 1 / (lengthVec2(v) || 1));
     }
     physics.normalize = normalize;
+    /**
+     * Apply velocity to a body
+     *
+     * @param body The target body
+     * @param vel The velocity to apply
+     */
+    function applyVelocity(body, vel) {
+        console.log("ApplyL " + vel.x + " " + vel.y);
+        body.velocity.x += vel.x;
+        body.velocity.y += vel.y;
+        body.restingTime = 0;
+    }
+    physics.applyVelocity = applyVelocity;
     const EmptyCollision = () => {
         return {
             depth: 0,
