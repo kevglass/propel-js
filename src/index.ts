@@ -220,6 +220,7 @@ export namespace physics {
         exclusions: Record<number, number[]>;
         /** True if the world is paused */
         paused: boolean;
+        iterationCount: number
     }
 
     /**
@@ -331,7 +332,8 @@ export namespace physics {
             jointRestriction: 1,
             restTime,
             exclusions: {},
-            paused: false
+            paused: false,
+            iterationCount: 9
         }
     };
 
@@ -638,7 +640,7 @@ export namespace physics {
 
 
         // Compute collisions and iterate to resolve
-        for (let k = 9; k--;) {
+        for (let k = world.iterationCount; k--;) {
             let collision = false;
 
             // apply velocity to try and maintain joints
@@ -753,6 +755,7 @@ export namespace physics {
 
                             // Resolve collision
                             if (resolveCollision(world, bodyI, bodyJ, collisionInfo)) {
+
                                 collision = true;
                                 collisions = collisions.filter(c => c.bodyAId !== bodyI.id && c.bodyBId !== bodyJ.id);
 

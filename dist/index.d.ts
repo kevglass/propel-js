@@ -182,6 +182,7 @@ export declare namespace physics {
         exclusions: Record<number, number[]>;
         /** True if the world is paused */
         paused: boolean;
+        iterationCount: number;
     }
     /**
      * Get a list of all bodies in the system

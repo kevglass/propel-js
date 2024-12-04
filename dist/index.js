@@ -122,7 +122,8 @@ export var physics;
             jointRestriction: 1,
             restTime,
             exclusions: {},
-            paused: false
+            paused: false,
+            iterationCount: 9
         };
     }
     physics.createWorld = createWorld;
@@ -414,7 +415,7 @@ export var physics;
             }
         }
         // Compute collisions and iterate to resolve
-        for (let k = 9; k--;) {
+        for (let k = world.iterationCount; k--;) {
             let collision = false;
             // apply velocity to try and maintain joints
             for (const body of dynamics) {
@@ -692,7 +693,6 @@ export var physics;
      * @param vel The velocity to apply
      */
     function applyVelocity(body, vel) {
-        console.log("ApplyL " + vel.x + " " + vel.y);
         body.velocity.x += vel.x;
         body.velocity.y += vel.y;
         body.restingTime = 0;
