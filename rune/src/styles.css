@@ -1,0 +1,47 @@
+
+body {
+  font-family: "Roboto", sans-serif;
+  text-align: center;
+}
+
+#render {
+  width: 500px;
+  height: 500px;
+  max-width: 100%;
+  background: black;
+}
+
+#controls {
+  max-width: calc(100% - 10px);
+  width: 490px;
+  height: 30px;
+  background: grey;
+  margin: auto;
+  margin-bottom: 10px;
+  text-align: left;
+  padding: 5px;
+  position: relative;
+}
+
+#demo {
+  position: absolute;
+  left: 5px;
+  height: 30px;
+  font-size: 20px;
+}
+
+#restart {
+  position: absolute;
+  right: 5px;
+  font-size: 20px;
+}
+
+#info {
+  font-size: 20px;
+  padding: 10px;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}

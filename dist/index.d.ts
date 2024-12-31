@@ -63,6 +63,7 @@ export declare namespace physics {
      * A joint between two bodies that should be enforced
      */
     export interface Joint {
+        id: number;
         /** The ID of the first body connected to the joint */
         bodyA: number;
         /** The ID of the second body connected to the joint */
@@ -184,6 +185,7 @@ export declare namespace physics {
         paused: boolean;
         iterationCount: number;
     }
+    export function ensureOrder(world: World): void;
     /**
      * Get a list of all bodies in the system
      *
@@ -320,6 +322,18 @@ export declare namespace physics {
      * @returns The length of the vector
      */
     export function lengthVec2(v: Vector2): number;
+    /**
+     * Find the angle between two vectors using a single
+     * trig function. This is important since Rune patches math
+     * precision and if we use two functions (say two atan2 to
+     * work out the angle between vectors we get double rounding and
+     * errors add up!)
+     *
+     * @param v1 The first vector
+     * @param v2 The second vector
+     * @returns The angle between to the two vectors
+     */
+    export function angleBetween(v1: Vector2, v2: Vector2): number;
     /**
      * Add a vector to another
      *

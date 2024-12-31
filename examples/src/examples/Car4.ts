@@ -1,6 +1,6 @@
 import { physics } from "../../../dist/index.js";
 
-let chassis: physics.DynamicRigidBody | undefined = undefined;
+let chassisId: number;
 
 // jointed car
 export function car4Init() {
@@ -24,16 +24,21 @@ export function car4Init() {
     const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3, true);
     const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3, true);
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
-    chassis = physics.createRigidBody(world, { x: 170, y: 0 }, 1, friction, 0, [base, leftAnchor, rightAnchor]) as physics.DynamicRigidBody
+    const chassis = physics.createRigidBody(world, { x: 170, y: 0 }, 1, friction, 0, [base, leftAnchor, rightAnchor]) as physics.DynamicRigidBody
     physics.addBody(world, chassis);
     physics.excludeCollisions(world, chassis, circle1);
     physics.excludeCollisions(world, chassis, circle2);
     physics.createJoint(world, circle1, leftAnchor, 1, 0);
     physics.createJoint(world, circle2, rightAnchor, 1, 0);
+    chassisId = chassis.id
+
     return world;
 }
 
-export function car4Update() {
-    chassis.velocity.x = 350;
-    return chassis;
+export function car4Update(world: physics.World) {
+    const chassis = world.dynamicBodies.find(b => b.id === chassisId)
+    if (chassis) {
+        chassis.velocity.x = 350;
+        return chassis;
+    }
 }

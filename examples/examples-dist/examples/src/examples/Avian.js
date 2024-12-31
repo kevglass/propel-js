@@ -1,15 +1,4 @@
 import { physics } from "../../../dist/index.js";
-export function avianUpdate(world) {
-    if (world.frameCount === 120) {
-        const friction = 0.5;
-        const rest = 0.5;
-        const ball = physics.createCircle(world, { x: 80, y: 400 }, 10, 20, friction, rest);
-        physics.addBody(world, ball);
-        ball.velocity.x = 500 + Math.floor(Math.random() * 100);
-        ball.velocity.y = -400 + Math.floor(Math.random() * 300);
-    }
-    return undefined;
-}
 export function avianInit() {
     const world = physics.createWorld({ x: 0, y: 300 });
     world.damp = 0.98;
@@ -45,5 +34,11 @@ export function avianInit() {
     physics.addBody(world, crate);
     crate = physics.createRectangle(world, { x: 350, y: 270 }, 15, 30, 1, friction, rest);
     physics.addBody(world, crate);
+    setTimeout(() => {
+        const ball = physics.createCircle(world, { x: 80, y: 400 }, 10, 20, friction, rest);
+        physics.addBody(world, ball);
+        ball.velocity.x = 500 + Math.floor(Math.random() * 100);
+        ball.velocity.y = -400 + Math.floor(Math.random() * 300);
+    }, 2000);
     return world;
 }

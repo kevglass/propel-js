@@ -1,5 +1,5 @@
 import { physics } from "../../../dist/index.js";
-let playerId;
+let player;
 let left = false;
 let right = false;
 let onFloor = false;
@@ -14,10 +14,9 @@ export function platformerInit() {
     physics.addBody(world, rect);
     const rect2 = physics.createRectangle(world, { x: 435, y: 335 }, 30, 200, 0, 0.5, 0.5);
     physics.addBody(world, rect2);
-    const player = physics.createRectangle(world, { x: 255, y: 400 }, 30, 60, 1, 0, 0.5);
+    player = physics.createRectangle(world, { x: 255, y: 400 }, 30, 60, 1, 0, 0.5);
     player.fixedRotation = true;
     physics.addBody(world, player);
-    playerId = player.id;
     const box = physics.createRectangle(world, { x: 100, y: 400 }, 40, 40, 0, 0.5, 0.5);
     physics.addBody(world, box);
     const box2 = physics.createRectangle(world, { x: 250, y: 330 }, 140, 10, 0, 0.5, 0.5);
@@ -27,7 +26,6 @@ export function platformerInit() {
     return world;
 }
 export function platformerInput(world, input, on) {
-    const player = world.dynamicBodies.find((b) => b.id === playerId);
     if (on) {
         if (input === "a" || input === "ArrowLeft") {
             left = true;
@@ -51,7 +49,6 @@ export function platformerInput(world, input, on) {
     }
 }
 export function platformerUpdate(world, collisions) {
-    const player = world.dynamicBodies.find((b) => b.id === playerId);
     player.velocity.x = (left ? -MOVE_SPEED : 0) + (right ? MOVE_SPEED : 0);
     player.restingTime = 0;
     const allBodies = physics.allBodies(world);

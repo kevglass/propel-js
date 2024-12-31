@@ -1,26 +1,24 @@
-import { physics } from "../../dist/index.js";
-import { simpleInit } from "./examples/Simple.js";
-import { stackInit } from "./examples/Stack.js";
-import { pileInit, pileUpdate } from "./examples/Pile.js";
-import { jointsInit } from "./examples/Joints.js";
-import { carInit } from "./examples/Car.js";
-import { avianInit, avianUpdate } from "./examples/Avian.js";
-import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
-import { compoundInit } from "./examples/Compound.js";
-import { sensorInit } from "./examples/Sensor.js";
-import { polyboxInit } from "./examples/Polybox.js";
-import { exclusionsInit } from "./examples/Exclusions.js";
-import { gooInit } from "./examples/Goo.js";
-import { compoundJointInit } from "./examples/CompoundJoint.js";
-import { noGravityInit } from "./examples/NoGravity.js";
-import { car3Init } from "./examples/Car3.js";
-import { car4Init, car4Update } from "./examples/Car4.js";
-import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive.js";
-import { marbleInit } from "./examples/Marble.js";
-import { wobblyJointsInit } from "./examples/WobblyJoints.js";
-import { teleporterInit, teleporterUpdate } from "./examples/Teleporter.js";
-import { patchMathPrecision } from "./runePatchMathPrecision.js";
-patchMathPrecision();
+import { physics } from "../../src/index";
+import { simpleInit } from "./examples/Simple";
+import { stackInit } from "./examples/Stack";
+import { pileInit, pileUpdate } from "./examples/Pile";
+import { jointsInit } from "./examples/Joints";
+import { carInit } from "./examples/Car";
+import { avianInit } from "./examples/Avian";
+import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer";
+import { compoundInit } from "./examples/Compound";
+import { sensorInit } from "./examples/Sensor";
+import { polyboxInit } from "./examples/Polybox";
+import { exclusionsInit } from "./examples/Exclusions";
+import { gooInit } from "./examples/Goo";
+import { compoundJointInit } from "./examples/CompoundJoint";
+import { noGravityInit } from "./examples/NoGravity";
+import { car3Init } from "./examples/Car3";
+import { car4Init, car4Update } from "./examples/Car4";
+import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from "./examples/CarInteractive";
+import { marbleInit } from "./examples/Marble";
+import { wobblyJointsInit } from "./examples/WobblyJoints";
+import { teleporterInit, teleporterUpdate } from "./examples/Teleporter";
 const canvas = document.getElementById("render");
 const ctx = canvas.getContext("2d");
 canvas.width = 500;
@@ -41,9 +39,6 @@ let world;
 let currentDemo;
 function render() {
     requestAnimationFrame(render);
-    if (world.frameCount < 2) {
-        console.log(currentDemo.name, world.dynamicBodies);
-    }
     const collisions = physics.worldStep(60, world);
     let focusBody = undefined;
     if (currentDemo.update) {
@@ -146,7 +141,7 @@ const DEMOS = [
     { name: "Joints", init: jointsInit },
     { name: "Wobbly Joints", init: wobblyJointsInit },
     { name: "Car", init: carInit },
-    { name: "Upset Avians", init: avianInit, update: avianUpdate },
+    { name: "Upset Avians", init: avianInit },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
     { name: "Teleporter", init: teleporterInit, update: teleporterUpdate },

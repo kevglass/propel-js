@@ -16,16 +16,6 @@ export var physics;
         /** A rectangle shape */
         ShapeType[ShapeType["RECTANGLE"] = 1] = "RECTANGLE";
     })(ShapeType = physics.ShapeType || (physics.ShapeType = {}));
-    function ensureOrder(world) {
-        world.dynamicBodies.sort((a, b) => a.id - b.id);
-        world.staticBodies.sort((a, b) => a.id - b.id);
-        world.disabledBodies.sort((a, b) => a.id - b.id);
-        world.joints.sort((a, b) => a.id - b.id);
-        world.dynamicBodies.forEach(b => b.shapes.sort((a, b) => a.id - b.id));
-        world.staticBodies.forEach(b => b.shapes.sort((a, b) => a.id - b.id));
-        world.disabledBodies.forEach(b => b.shapes.sort((a, b) => a.id - b.id));
-    }
-    physics.ensureOrder = ensureOrder;
     /**
      * Get a list of all bodies in the system
      *
@@ -185,7 +175,6 @@ export var physics;
      */
     function createJoint(world, bodyA, bodyB, rigidity = 1, elasticity = 0, soft = false) {
         const joint = {
-            id: world.nextId++,
             bodyA: bodyA.type === "BODY" ? bodyA.id : bodyA.bodyId,
             bodyB: bodyB.type === "BODY" ? bodyB.id : bodyB.bodyId,
             distance: 0,
@@ -333,9 +322,9 @@ export var physics;
         const diff = distance - joint.distance;
         if (diff != 0) {
             if (!body.static) {
-                const pointOfRotation = subtractVec2(body.centerOfPhysics, center);
-                if (lengthVec2(pointOfRotation) > 0) {
-                    let ang = angleBetween(vec, pointOfRotation);
+                const por = subtractVec2(body.centerOfPhysics, center);
+                if (lengthVec2(por) > 0) {
+                    let ang = Math.atan2(-vec.y, -vec.x) - Math.atan2(por.y, por.x);
                     if (ang > Math.PI) {
                         ang = Math.PI - ang;
                     }
@@ -383,7 +372,6 @@ export var physics;
         if (world.paused) {
             return [];
         }
-        world.frameCount++;
         dynamics = dynamics ?? world.dynamicBodies;
         const allEnabled = enabledBodies(world, dynamics);
         const all = allBodies(world, dynamics);
@@ -619,29 +607,6 @@ export var physics;
         return dotProduct(v, v) ** .5;
     }
     physics.lengthVec2 = lengthVec2;
-    /**
-     * Find the angle between two vectors using a single
-     * trig function. This is important since Rune patches math
-     * precision and if we use two functions (say two atan2 to
-     * work out the angle between vectors we get double rounding and
-     * errors add up!)
-     *
-     * @param v1 The first vector
-     * @param v2 The second vector
-     * @returns The angle between to the two vectors
-     */
-    function angleBetween(v1, v2) {
-        // calculate the angle with a single trig function
-        let ang = Math.acos(dotProduct(normalize(scaleVec2(v1, -1)), normalize(v2)));
-        // determine the direction of the angle based on the perpendicular vector
-        const dir = dotProduct(newVec2(-v1.y, v1.x), v2);
-        // switch the angle over if the directions is negative
-        if (dir < 0) {
-            ang = -ang;
-        }
-        return ang;
-    }
-    physics.angleBetween = angleBetween;
     /**
      * Add a vector to another
      *

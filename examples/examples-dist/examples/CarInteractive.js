@@ -1,15 +1,15 @@
 import { physics } from "../../../dist/index.js";
-let chassis = undefined;
-let circle1 = undefined;
-let circle2 = undefined;
+let chassisId;
+let circle1Id;
+let circle2Id;
 let left = false;
 let right = false;
 const MAX_VELOCITY = 10000;
 const CAR_ACCEL = 2000;
 const CAR_TILT = 2;
 let lastOnGround = Date.now();
-let rightSensor;
-let leftSensor;
+let rightSensorId;
+let leftSensorId;
 // jointed car
 export function carInteractiveInit() {
     const world = physics.createWorld({ x: 0, y: 300 });
@@ -26,12 +26,17 @@ export function carInteractiveInit() {
     const leftAnchor = physics.createCircleShape(world, { x: 150, y: 0 }, 3);
     const rightAnchor = physics.createCircleShape(world, { x: 190, y: 0 }, 3);
     // give them a bit of padding to consume the resolution of wheels against floor
-    leftSensor = physics.createCircleShape(world, { x: 150, y: 0 }, 16.5, true);
-    rightSensor = physics.createCircleShape(world, { x: 190, y: 0 }, 16.5, true);
+    const leftSensor = physics.createCircleShape(world, { x: 150, y: 0 }, 16.5, true);
+    const rightSensor = physics.createCircleShape(world, { x: 190, y: 0 }, 16.5, true);
+    leftSensorId = leftSensor.id;
+    rightSensorId = rightSensor.id;
     const base = physics.createRectangleShape(world, { x: 170, y: -25 }, 60, 20, 0);
-    chassis = physics.createRigidBody(world, { x: 170, y: 10 }, 1, friction, 0, [base, leftAnchor, rightAnchor, leftSensor, rightSensor]);
-    circle1 = physics.createCircle(world, { x: 150, y: 0 }, 15, 3, friction, 0);
-    circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0);
+    const chassis = physics.createRigidBody(world, { x: 170, y: 10 }, 1, friction, 0, [base, leftAnchor, rightAnchor, leftSensor, rightSensor]);
+    const circle1 = physics.createCircle(world, { x: 150, y: 0 }, 15, 3, friction, 0);
+    const circle2 = physics.createCircle(world, { x: 190, y: 0 }, 15, 3, friction, 0);
+    chassisId = chassis.id;
+    circle1Id = circle1.id;
+    circle2Id = circle2.id;
     physics.addBody(world, chassis);
     physics.addBody(world, circle1);
     physics.addBody(world, circle2);
@@ -60,6 +65,11 @@ export function carInteractiveInput(world, input, on) {
     }
 }
 export function carInteractiveUpdate(world, collisions) {
+    const chassis = world.dynamicBodies.find((b) => b.id === chassisId);
+    const circle1 = world.dynamicBodies.find((b) => b.id === circle1Id);
+    const circle2 = world.dynamicBodies.find((b) => b.id === circle2Id);
+    const leftSensor = chassis.shapes.find((s) => s.id === leftSensorId);
+    const rightSensor = chassis.shapes.find((s) => s.id === rightSensorId);
     const isMidAir = !leftSensor.sensorColliding && !rightSensor.sensorColliding;
     chassis.restingTime = 0;
     circle1.restingTime = 0;

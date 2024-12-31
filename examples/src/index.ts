@@ -4,7 +4,7 @@ import { stackInit } from "./examples/Stack.js";
 import { pileInit, pileUpdate } from "./examples/Pile.js";
 import { jointsInit } from "./examples/Joints.js";
 import { carInit } from "./examples/Car.js";
-import { avianInit } from "./examples/Avian.js";
+import { avianInit, avianUpdate } from "./examples/Avian.js";
 import { platformerInit, platformerInput, platformerUpdate } from "./examples/Platformer.js";
 import { compoundInit } from "./examples/Compound.js";
 import { sensorInit } from "./examples/Sensor.js";
@@ -20,6 +20,9 @@ import { carInteractiveInit, carInteractiveInput, carInteractiveUpdate } from ".
 import { marbleInit } from "./examples/Marble.js";
 import { wobblyJointsInit } from "./examples/WobblyJoints.js";
 import { teleporterInit, teleporterUpdate } from "./examples/Teleporter.js";
+import { patchMathPrecision } from "./runePatchMathPrecision.js";
+
+patchMathPrecision()
 
 const canvas = document.getElementById("render") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
@@ -58,6 +61,9 @@ export interface Demo {
 
 function render() {
     requestAnimationFrame(render);
+    if (world.frameCount < 2) {
+      console.log(currentDemo.name, world.dynamicBodies)
+    }
     const collisions = physics.worldStep(60, world);
 
     let focusBody: physics.Body | undefined = undefined;
@@ -177,7 +183,7 @@ const DEMOS: Demo[] = [
     { name: "Joints", init: jointsInit },
     { name: "Wobbly Joints", init: wobblyJointsInit },
     { name: "Car", init: carInit },
-    { name: "Upset Avians", init: avianInit },
+    { name: "Upset Avians", init: avianInit, update: avianUpdate },
     { name: "Platformer", init: platformerInit, input: platformerInput, update: platformerUpdate },
     { name: "Sensor", init: sensorInit },
     { name: "Teleporter", init: teleporterInit, update: teleporterUpdate },
